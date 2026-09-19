@@ -1,0 +1,162 @@
+{
+ "topic": "dsa",
+ "title": "Data Structures & Algorithms",
+ "nodes": [
+  {
+   "id": "complexity",
+   "name": "Complexity analysis",
+   "unit": "Foundations",
+   "subtopics": []
+  },
+  {
+   "id": "linear",
+   "name": "Arrays, stacks & queues",
+   "unit": "Structures",
+   "subtopics": []
+  },
+  {
+   "id": "sorting",
+   "name": "Sorting algorithms",
+   "unit": "Algorithms",
+   "subtopics": []
+  },
+  {
+   "id": "hashing",
+   "name": "Hash tables",
+   "unit": "Structures",
+   "subtopics": []
+  },
+  {
+   "id": "trees",
+   "name": "Trees & BSTs",
+   "unit": "Structures",
+   "subtopics": []
+  },
+  {
+   "id": "graphs",
+   "name": "Graph traversal",
+   "unit": "Algorithms",
+   "subtopics": []
+  }
+ ],
+ "edges": [
+  {
+   "source": "complexity",
+   "target": "linear",
+   "weight": 0.7,
+   "rationale": "Arrays, stacks & queues builds on complexity",
+   "origin": "human"
+  },
+  {
+   "source": "complexity",
+   "target": "sorting",
+   "weight": 0.7,
+   "rationale": "Sorting algorithms builds on complexity",
+   "origin": "human"
+  },
+  {
+   "source": "linear",
+   "target": "sorting",
+   "weight": 0.7,
+   "rationale": "Sorting algorithms builds on linear",
+   "origin": "human"
+  },
+  {
+   "source": "complexity",
+   "target": "hashing",
+   "weight": 0.7,
+   "rationale": "Hash tables builds on complexity",
+   "origin": "human"
+  },
+  {
+   "source": "linear",
+   "target": "hashing",
+   "weight": 0.7,
+   "rationale": "Hash tables builds on linear",
+   "origin": "human"
+  },
+  {
+   "source": "linear",
+   "target": "trees",
+   "weight": 0.7,
+   "rationale": "Trees & BSTs builds on linear",
+   "origin": "human"
+  },
+  {
+   "source": "linear",
+   "target": "graphs",
+   "weight": 0.7,
+   "rationale": "Graph traversal builds on linear",
+   "origin": "human"
+  },
+  {
+   "source": "trees",
+   "target": "graphs",
+   "weight": 0.7,
+   "rationale": "Graph traversal builds on trees",
+   "origin": "human"
+  }
+ ],
+ "misconceptions": [
+  {
+   "id": "complexity.bigo-is-time",
+   "node_id": "complexity",
+   "belief": "believes Big-O gives the exact running time"
+  },
+  {
+   "id": "complexity.worst-only",
+   "node_id": "complexity",
+   "belief": "believes average and worst case are always the same"
+  },
+  {
+   "id": "linear.stack-fifo",
+   "node_id": "linear",
+   "belief": "believes a stack removes the oldest element first"
+  },
+  {
+   "id": "linear.array-insert-o1",
+   "node_id": "linear",
+   "belief": "believes inserting in the middle of an array is O(1)"
+  },
+  {
+   "id": "sorting.quick-always-fast",
+   "node_id": "sorting",
+   "belief": "believes quicksort is always O(n log n)"
+  },
+  {
+   "id": "sorting.stable-means-fast",
+   "node_id": "sorting",
+   "belief": "confuses a stable sort with a fast sort"
+  },
+  {
+   "id": "hashing.hash-always-o1",
+   "node_id": "hashing",
+   "belief": "believes hash lookup is always O(1)"
+  },
+  {
+   "id": "hashing.hash-ordered",
+   "node_id": "hashing",
+   "belief": "believes a hash table keeps keys in sorted order"
+  },
+  {
+   "id": "trees.bst-balanced",
+   "node_id": "trees",
+   "belief": "believes every BST has height log n"
+  },
+  {
+   "id": "trees.inorder-any",
+   "node_id": "trees",
+   "belief": "believes inorder traversal of any binary tree is sorted"
+  },
+  {
+   "id": "graphs.bfs-dfs-same",
+   "node_id": "graphs",
+   "belief": "believes BFS and DFS visit nodes in the same order"
+  },
+  {
+   "id": "graphs.dfs-shortest",
+   "node_id": "graphs",
+   "belief": "believes DFS finds shortest paths in unweighted graphs"
+  }
+ ]
+}

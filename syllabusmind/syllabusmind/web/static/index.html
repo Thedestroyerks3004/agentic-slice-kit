@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SyllabusMind</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>">
+<style>
+:root{--bg:#0d1117;--panel:#161b22;--panel2:#1c232c;--line:#2a323d;--text:#e6edf3;--mute:#8b98a5;--accent:#7c9cff;--accent2:#5eead4;
+--unknown:#5b6672;--tentative:#9fb3c8;--weak:#f87171;--shaky:#fbbf24;--solid:#4ade80;--verified:#facc15;--danger:#ff4d8d;--r:14px}
+:root[data-theme=light]{--bg:#f5f7fb;--panel:#fff;--panel2:#f0f3f9;--line:#dde3ee;--text:#18202b;--mute:#5d6b7c;--accent:#4a63e7;--accent2:#0f9d8a;
+--unknown:#9aa6b4;--tentative:#7d93ab;--weak:#dc2626;--shaky:#d97706;--solid:#16a34a;--verified:#ca8a04;--danger:#db2777}
+@media(prefers-color-scheme:light){:root:not([data-theme=dark]){--bg:#f5f7fb;--panel:#fff;--panel2:#f0f3f9;--line:#dde3ee;--text:#18202b;--mute:#5d6b7c;--accent:#4a63e7;--accent2:#0f9d8a;--unknown:#9aa6b4;--tentative:#7d93ab;--weak:#dc2626;--shaky:#d97706;--solid:#16a34a;--verified:#ca8a04;--danger:#db2777}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 Inter,system-ui,Segoe UI,sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
+.logo{font-weight:800;font-size:18px;letter-spacing:-.02em}.logo b{color:var(--accent)}
+.pill{font-size:12px;padding:3px 10px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);color:var(--mute)}
+.pill.live{color:var(--solid);border-color:var(--solid)}.sp{flex:1}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:10px;padding:8px 14px}
+button:hover{border-color:var(--accent)}button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:#fff;border-color:transparent;font-weight:600}
+main{max-width:1280px;margin:0 auto;padding:20px}
+.hero{text-align:center;padding:44px 0 24px}.hero h1{font-size:40px;letter-spacing:-.03em;margin:0 0 10px}
+.hero p{color:var(--mute);max-width:640px;margin:0 auto}
+.steps{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:22px 0}.steps span{font-size:13px;color:var(--mute)}
+.steps b{color:var(--accent2)}
+.grid{display:grid;gap:16px}.topics{grid-template-columns:repeat(auto-fit,minmax(280px,1fr));max-width:760px;margin:0 auto}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.topic{cursor:pointer;transition:.15s}.topic:hover{transform:translateY(-2px);border-color:var(--accent)}
+.topic h3{margin:0 0 4px}.muted{color:var(--mute);font-size:13px}
+.layout{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:16px}
+@media(max-width:960px){.layout{grid-template-columns:1fr}}
+.stem{font-size:19px;font-weight:600;margin:8px 0 14px}.tag{display:inline-block;font-size:12px;padding:2px 9px;border-radius:99px;background:var(--panel2);color:var(--mute);margin-right:6px}
+.opt{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;margin:8px 0;padding:12px 14px;border-radius:12px}
+.opt .k{font-weight:700;color:var(--accent);min-width:18px}.opt.sel{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--panel2))}
+.conf{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.conf button{padding:14px 6px;font-weight:600}
+.conf button:disabled{opacity:.4;cursor:not-allowed}
+.conf .guessing:hover{border-color:var(--shaky)}.conf .certain:hover{border-color:var(--danger)}
+.bar{height:6px;background:var(--panel2);border-radius:9px;overflow:hidden;margin:6px 0 2px}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+svg{width:100%;height:auto;display:block}.edge{stroke:var(--line);fill:none}.edge.on{stroke:var(--accent)}
+.node{cursor:pointer}.node text{fill:var(--text);font-size:12px;text-anchor:middle;paint-order:stroke;stroke:var(--panel);stroke-width:4px}
+.node .ic{font-size:14px;font-weight:800;stroke:none;fill:#0d1117}
+.pulse{animation:p 1.4s infinite}@keyframes p{0%{opacity:1;r:26}100%{opacity:0;r:40}}
+@media(prefers-reduced-motion:reduce){.pulse{animation:none}}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--mute);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.log{max-height:280px;overflow:auto;font-size:13px}.log div{padding:7px 0;border-bottom:1px solid var(--line)}
+.log .back{color:var(--danger);font-weight:600}.log small{color:var(--mute)}
+.drawer{position:fixed;right:0;top:0;bottom:0;width:min(420px,100%);background:var(--panel);border-left:1px solid var(--line);padding:20px;overflow:auto;transform:translateX(100%);transition:.2s;z-index:10}
+.drawer.open{transform:none}.ev{border-left:3px solid var(--line);padding:6px 10px;margin:10px 0;background:var(--panel2);border-radius:8px}
+.ev.ok{border-color:var(--solid)}.ev.bad{border-color:var(--weak)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}.stat b{display:block;font-size:26px}
+h2{margin:0 0 10px;font-size:16px}ul.c{padding-left:18px;margin:6px 0}
+.banner{padding:10px 14px;border-radius:10px;background:color-mix(in srgb,var(--danger) 14%,var(--panel));border:1px solid var(--danger);margin-bottom:14px}
+table{border-collapse:collapse;width:100%;font-size:13px}th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{color:var(--mute);font-weight:600}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+.fb{margin-bottom:12px;font-size:14px}.fb.ok{border-color:var(--solid)}.fb.bad{border-color:var(--weak)}
+.choose button.primary{margin-top:10px}.choose td button{padding:5px 10px}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Syllabus<b>Mind</b></div><span class="pill" id="mode"></span><span class="sp"></span>
+  <span class="pill" id="tok"></span>
+  <button id="theme" aria-label="Toggle theme">◐</button>
+</header>
+<main id="app"></main>
+<aside class="drawer" id="drawer" aria-live="polite"></aside>
+<script>
+const $=s=>document.querySelector(s), app=$('#app');
+const COL={unknown:'--unknown',tentative:'--tentative',weak:'--weak',shaky:'--shaky',solid:'--solid',verified:'--verified'};
+const ICON={unknown:'?',tentative:'·',weak:'✕',shaky:'~',solid:'✓',verified:'★'};
+const LBL={unknown:'not assessed',tentative:'tentative (1 answer)',weak:'weak',shaky:'shaky',solid:'solid',verified:'verified'};
+const CONF={guessing:'Guessing',fairly_sure:'Fairly sure',certain:'Certain'};
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+let run=null, sel=null, chosen=null, poll=null;
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function api(p,o){const r=await fetch(p,o&&{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(o)});
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||r.statusText)}return r.json()}
+$('#theme').onclick=()=>{const d=document.documentElement;const cur=d.dataset.theme||(matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');
+  d.dataset.theme=cur==='dark'?'light':'dark';try{localStorage.theme=d.dataset.theme}catch(e){}if(run)draw()};
+try{if(localStorage.theme)document.documentElement.dataset.theme=localStorage.theme}catch(e){}
+
+async function home(){
+  clearInterval(poll);run=null;$('#drawer').classList.remove('open');
+  const t=await api('/api/topics');setMode(t.mode);$('#tok').textContent='';
+  app.innerHTML=`<div class="hero"><h1>Find what you're <em style="color:var(--danger)">confidently wrong</em> about.</h1>
+  <p>Pick a syllabus. The agent maps prerequisites, diagnoses your beliefs, predicts where they'll hurt next, tests its own prediction, and only calls a topic fixed after a test built to catch lucky guesses.</p>
+  <div class="steps"><span><b>1</b> Diagnose</span>→<span><b>2</b> Predict</span>→<span><b>3</b> Probe</span>→<span><b>4</b> Prove</span></div></div>
+  <div class="grid topics">${t.topics.map(x=>`<div class="card topic" tabindex="0" data-t="${x.topic}"><h3>${esc(x.title)}</h3>
+  <div class="muted">${x.nodes} topics · ${x.questions} reviewed questions</div><p class="muted">Every question cites the study notes and passed a verification gate.</p>
+  <button class="primary">Start diagnostic →</button></div>`).join('')}</div>`;
+  app.querySelectorAll('.topic').forEach(e=>{const go=()=>start(e.dataset.t);e.onclick=go;e.onkeydown=k=>k.key==='Enter'&&go()});
+}
+function setMode(m){const e=$('#mode');e.textContent=m==='live'?'● live model':'stub model (no key)';e.className='pill '+(m==='live'?'live':'')}
+async function start(topic){run=await api('/api/runs',{topic});chosen=null;sel=null;render();poll=setInterval(refresh,8000)}
+async function refresh(){if(!run||run.state==='complete'||run.state==='failed')return;try{run=await api('/api/runs/'+run.run_id);render()}catch(e){}}
+async function reply(body){
+  try{run=await api(`/api/runs/${run.run_id}/reply`,body);chosen=null;render()}
+  catch(e){alert(e.message);refresh()}}
+
+function render(){setMode(run.mode);$('#tok').textContent=run.tokens?`${Math.round(run.tokens)} tokens`:'';
+  if(run.state==='complete')return report();
+  if(run.state==='failed'){app.innerHTML=`<div class="banner">The run stopped: ${esc(run.failure||'unknown reason')}. Replay shows every step.</div><button onclick="home()">Back</button>`;return}
+  app.innerHTML=`<div class="layout"><div id="left"></div><div><div class="card"><h2>Prerequisite map <span class="muted">— click a topic for its evidence</span></h2><div id="graph"></div>${legend()}</div>
+  <div class="card" style="margin-top:16px"><h2>Agent log</h2><div class="log" id="log"></div></div></div></div>`;
+  left();draw();logv()}
+function trustTable(pick){
+  const lbl=t=>t==null?'—':t>=.6?'high':t>=.4?'medium':'low';
+  const rows=run.nodes.slice().sort((a,b)=>(b.danger-a.danger)||((a.n?a.mastery:9)-(b.n?b.mastery:9)));
+  return `<div style="overflow:auto"><table><thead><tr><th>Concept</th><th>Status</th><th>Mastery</th><th>Trust in score</th><th>Answers</th><th>Weak links below it</th>${pick?'<th></th>':''}</tr></thead><tbody>
+  ${rows.map(n=>`<tr><td><b>${esc(n.name)}</b>${n.danger?' <span class="tag" style="color:var(--danger)">confidently wrong</span>':''}</td>
+  <td><i class="dot" style="background:var(${COL[n.status]})"></i>${LBL[n.status]}</td>
+  <td>${n.n?`${Math.round(n.mastery*100)}% <span class="muted">(${Math.round(n.low*100)}–${Math.round(n.high*100)})</span>`:'<span class="muted">not assessed</span>'}</td>
+  <td>${n.trust==null?'—':Math.round(n.trust*100)+'% · '+lbl(n.trust)}</td><td>${n.n}</td>
+  <td class="muted">${n.weak_links.length?esc(n.weak_links.join(', ')):'none found'}</td>
+  ${pick?`<td><button class="primary" data-c="${n.id}">Drill this</button></td>`:''}</tr>`).join('')}</tbody></table></div>
+  <p class="muted">Trust = how narrow the range is: few answers give a wide range and a low trust. Not assessed means unknown, not zero.</p>`}
+function feedback(){const l=run.last;if(!l)return '';
+  return `<div class="card fb ${l.correct?'ok':'bad'}"><b>${l.correct?'✓ Correct':'✕ Not quite'}</b> <span class="muted">· ${esc(l.node)} · you said ${CONF[l.confidence].toLowerCase()}</span>
+  ${l.correct?'':`<div>You chose: ${esc(l.chosen)}<br>Right answer: <b>${esc(l.right)}</b></div>`}
+  <div style="margin-top:6px"><b>Why:</b> ${esc(l.why)}</div>${l.belief?`<div style="color:var(--danger);margin-top:4px">Belief behind that choice: ${esc(l.belief)}</div>`:''}</div>`}
+function left(){const q=run.question,L=$('#left');
+  const pct=Math.min(100,Math.round(run.answered/(run.phase==='diagnostic'?12:20)*100));
+  const head=`<div class="muted">${run.phase.toUpperCase()} · ${run.answered} answered</div><div class="bar"><i style="width:${pct}%"></i></div>`;
+  if(!q){L.innerHTML=feedback()+`<div class="card">${head}<p>Working…</p></div>`;return}
+  if(q.kind==='choose'){L.innerHTML=feedback()+`<div class="card choose">${head}<h2>Trust scores: choose a concept to work on</h2>
+   <p class="muted">Weakest and confidently-wrong concepts are listed first. Pick one and the agent runs a focused session on it, stepping down to prerequisites if needed.</p>
+   ${trustTable(true)}<button class="primary" data-c="auto">Let the agent choose</button></div>`;
+   L.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>reply({choose:b.dataset.c}));return}
+  L.innerHTML=feedback()+`<div class="card">${head}<span class="tag">${esc(q.node)}</span><span class="tag">L${q.level}</span>${q.role!=='standard'?`<span class="tag">proof · ${q.role}</span>`:''}
+  <div class="stem">${esc(q.stem)}</div>
+  ${q.options.map(o=>`<button class="opt ${chosen===o.key?'sel':''}" data-k="${o.key}"><span class="k">${o.key}</span><span>${esc(o.text)}</span></button>`).join('')}
+  <div class="muted" style="margin-top:12px">How sure are you? <b>Tap to submit.</b></div>
+  <div class="conf">${Object.entries(CONF).map(([k,v])=>`<button class="${k}" data-f="${k}" ${chosen?'':'disabled'}>${v}</button>`).join('')}</div>
+  <div style="margin-top:12px"><button data-flag class="muted">Flag this question as unclear</button></div></div>`;
+  L.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{chosen=b.dataset.k;left()});
+  L.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>chosen&&reply({choice:chosen,confidence:b.dataset.f}));
+  L.querySelector('[data-flag]').onclick=()=>reply({flag:true})}
+function legend(){return `<div class="legend">${Object.keys(COL).map(k=>`<span><i style="background:var(${COL[k]})"></i>${ICON[k]} ${LBL[k]}</span>`).join('')}<span><i style="background:none;border:2px solid var(--danger)"></i>confidently wrong</span></div>`}
+function draw(){const N=run.nodes,W=620,H=380,layers=Math.max(...N.map(n=>n.layer))+1,pos={};
+  for(let l=0;l<layers;l++){const row=N.filter(n=>n.layer===l);row.forEach((n,i)=>pos[n.id]={x:W*(i+1)/(row.length+1),y:H-50-(H-100)*(layers>1?l/(layers-1):0)})}
+  const active=run.question&&run.question.node_id;
+  const edges=run.edges.map(e=>{const a=pos[e.from],b=pos[e.to],my=(a.y+b.y)/2;
+    return `<path class="edge ${e.from===active||e.to===active?'on':''}" d="M${a.x},${a.y} C${a.x},${my} ${b.x},${my} ${b.x},${b.y}" stroke-width="${1+e.weight*3}"><title>weight ${e.weight}</title></path>`}).join('');
+  const nodes=N.map(n=>{const p=pos[n.id];const c=`var(${COL[n.status]})`;
+    return `<g class="node" tabindex="0" data-n="${n.id}" transform="translate(${p.x},${p.y})">
+    ${n.id===active?`<circle class="pulse" r="26" fill="none" stroke="var(--accent)" stroke-width="2"/>`:''}
+    <circle r="22" fill="${c}" ${n.danger?'stroke="var(--danger)" stroke-width="4"':'stroke="var(--panel)" stroke-width="2"'}/>
+    <text class="ic" y="5">${ICON[n.status]}</text><text y="40">${esc(n.name.length>18?n.name.slice(0,17)+'…':n.name)}</text><title>${esc(n.name)}: ${LBL[n.status]}</title></g>`}).join('');
+  $('#graph').innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Prerequisite map">${edges}${nodes}</svg>`;
+  document.querySelectorAll('.node').forEach(g=>{const o=()=>drawer(g.dataset.n);g.onclick=o;g.onkeydown=k=>k.key==='Enter'&&o()})}
+function logv(){const el=$('#log');if(!el)return;el.innerHTML=run.log.slice().reverse().map(l=>`<div class="${l.kind==='step_down'?'back':''}">${l.kind==='step_down'?'↩ ':''}${esc(l.reason)}<br><small>${l.kind}${l.node?' · '+esc(l.node):''}</small></div>`).join('')||'<div class="muted">Nothing yet.</div>'}
+function drawer(id){const n=run.nodes.find(x=>x.id===id),d=$('#drawer');
+  d.innerHTML=`<button onclick="this.parentNode.classList.remove('open')" style="float:right">Close</button><h2>${esc(n.name)}</h2>
+  <span class="tag" style="background:var(${COL[n.status]});color:#0d1117">${ICON[n.status]} ${LBL[n.status]}</span>${n.danger?'<span class="tag" style="color:var(--danger)">confidently wrong</span>':''}
+  <p class="muted">${n.n?`Mastery ${Math.round(n.mastery*100)}% (range ${Math.round(n.low*100)}–${Math.round(n.high*100)}) from ${n.n} answer(s). Wide range = little evidence.`:'Not assessed. This is unknown, not zero.'}</p>
+  ${n.evidence.map(e=>`<div class="ev ${e.correct?'ok':'bad'}"><b>${esc(e.stem)}</b><br>Chose: ${esc(e.chosen)} <span class="muted">· ${CONF[e.confidence]} · L${e.level} · ${e.phase}</span>
+  ${e.correct?'':`<br>Right answer: ${esc(e.right)}`}${e.belief?`<br><span style="color:var(--danger)">Belief: ${esc(e.belief)}</span>`:''}<br><small class="muted">${esc(e.why)}</small></div>`).join('')||''}
+  <h2 style="margin-top:18px">Beliefs this topic can expose</h2><ul class="c muted">${n.beliefs.map(b=>`<li>${esc(b)}</li>`).join('')}</ul>`;d.classList.add('open')}
+
+function report(){const r=run.report,pc=x=>Math.round(x*100),name=id=>run.nodes.find(n=>n.id===id)?.name||id;
+  const list=a=>a.length?a.map(x=>esc(name(x))).join(', '):'none';
+  app.innerHTML=`<div class="card" style="margin-bottom:16px"><h2>Session report · ${esc(run.title)}</h2><p class="muted">${esc(r.finished_reason)}</p>
+  <div class="stats"><div class="card stat"><span class="muted">Overall (assessed topics)</span><b>${r.overall==null?'—':pc(r.overall)+'%'}</b><span class="muted">${r.overall==null?'':`range ${pc(r.low)}–${pc(r.high)}`}</span></div>
+  <div class="card stat"><span class="muted">Coverage</span><b>${pc(r.coverage)}%</b><span class="muted">${r.questions_asked} questions</span></div>
+  <div class="card stat"><span class="muted">Predictions</span><b>${r.predictions_confirmed} of ${r.predictions_confirmed+r.predictions_refuted}</b><span class="muted">confirmed (counts, tiny sample)</span></div>
+  <div class="card stat"><span class="muted">Verified repairs</span><b>${r.verified_nodes.length}</b><span class="muted">passed a contrast pair</span></div></div></div>
+  ${feedback()}<div class="layout"><div><div class="card"><h2>Findings</h2><ul class="c"><li><b>Verified:</b> ${list(r.verified_nodes)}</li><li><b>Improving (not proven):</b> ${list(r.improving_nodes)}</li>
+  <li><b>Confidently wrong:</b> ${list(r.danger_nodes)}</li><li><b>Calibration flags:</b> ${r.calibration_flags}</li>
+  ${Object.keys(r.memory).length?`<li><b>Second encounter:</b> ${Object.entries(r.memory).map(([k,v])=>esc(name(k))+' '+v).join(', ')}</li>`:''}
+  ${r.root_causes.length?`<li><b>Likely root cause:</b> ${r.root_causes.map(esc).join('; ')}</li>`:''}</ul></div>
+  <div class="card" style="margin-top:16px"><h2>Trust scores by concept</h2>${trustTable(false)}</div><div class="card" style="margin-top:16px"><h2>What this doesn't know</h2><ul class="c">${r.caveats.map(c=>`<li>${esc(c)}</li>`).join('')}
+  <li>Not assessed: ${list(r.unassessed_nodes)}</li>${r.unanswered_questions?`<li><b>Asked, nobody answered:</b> ${r.unanswered_questions}</li>`:''}</ul>
+  <p class="muted">Graph <code>${esc(r.graph_hash)}</code> · question pool ${run.pool.usable} usable of ${run.pool.generated} generated, ${run.pool.rejected} rejected.</p></div></div>
+  <div><div class="card"><h2>Final map</h2><div id="graph"></div>${legend()}</div><div class="card" style="margin-top:16px"><h2>Agent log</h2><div class="log" id="log"></div></div></div></div>
+  <p><button class="primary" onclick="home()">New session</button></p>`;draw();logv()}
+home();
+</script>
+</body>
+</html>
