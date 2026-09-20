@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import type { BeliefState, LogEntry } from '../engine/types';
 import { STATE_META, STATE_ORDER, StateIcon } from '../lib/states';
-import { formatCost, getSimulateOffline, hasModel, hasUnpriced, isOpenRouter, setSimulateOffline, totalCost, usage } from '../lib/llm';
+import { formatCost, getSimulateOffline, hasModel, hasUnpriced, isOpenRouter, modelPaused, setSimulateOffline, totalCost, usage } from '../lib/llm';
 import { GRAPH, useApp } from '../store/useApp';
 import { evidenceFor } from '../lib/evidence';
 import { noticeView, type AlertVariant } from '../lib/notice';
@@ -53,6 +53,7 @@ export function NavBar({ route, go }: { route: Route; go: (r: Route) => void }) 
         )}
         <div className="ml-auto flex items-center gap-2 text-sm">
           {student && <span className="chip hidden sm:inline-flex">{student.name} · {student.roll}</span>}
+          <ModeBadge />
           <UsageBadge onClick={() => setSettings(true)} />
           <button className="btn" onClick={() => setSettings(true)}>Settings</button>
           {student && (
@@ -210,6 +211,20 @@ function useUsageTick() {
     window.addEventListener('sm-usage', f);
     return () => window.removeEventListener('sm-usage', f);
   }, []);
+}
+
+/** Live or backup, at a glance: a green dot while questions are being written by the model, amber when they are not. */
+export function ModeBadge() {
+  useUsageTick();
+  useAgentStage();
+  const live = hasModel() && !modelPaused();
+  const why = getSimulateOffline() ? 'Simulated offline' : !hasModel() ? 'No API key in .env.local' : modelPaused() ? 'Model paused after errors, retrying soon' : 'Questions are written live by the model';
+  return (
+    <span className="chip hidden sm:inline-flex" title={why} role="status">
+      <span className="inline-block h-2 w-2 rounded-full" style={{ background: live ? 'var(--state-solid)' : 'var(--state-shaky)' }} aria-hidden />
+      {live ? 'Live questions' : 'Backup questions'}
+    </span>
+  );
 }
 
 /** A small, always-visible running total, so credit spend is seen live rather than only inside Settings. */

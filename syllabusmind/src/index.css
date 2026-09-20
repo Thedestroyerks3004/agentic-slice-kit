@@ -216,3 +216,14 @@ h3 {
   background: var(--surface-alt);
   color: var(--text);
 }
+
+/* Gentle entrance for cards and screens; off for people who ask for less motion. */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.rise { animation: rise 0.35s ease-out both; }
+.card { transition: box-shadow 0.15s, border-color 0.15s; }
+@media (prefers-reduced-motion: reduce) {
+  .rise { animation: none; }
+}

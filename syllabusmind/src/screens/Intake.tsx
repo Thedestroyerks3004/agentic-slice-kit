@@ -86,6 +86,21 @@ export default function Intake({ go }: { go: (r: Route) => void }) {
           )}
         </div>
       </div>
+      <ol className="mt-6 grid gap-3 sm:grid-cols-3" aria-label="How it works">
+        {[
+          ['Map', 'See the whole course as a graph of topics and how they depend on each other.'],
+          ['Check', 'Answer two fresh questions per topic. Each wrong answer is traced to a specific misconception.'],
+          ['Fix', 'Get the weakest root cause first, and go deeper where a topic only looked solid.'],
+        ].map(([t, d], i) => (
+          <li key={t} className="card rise p-4 text-sm" style={{ animationDelay: `${i * 80}ms` }}>
+            <div className="flex items-center gap-2 font-semibold">
+              <span className="grid h-6 w-6 place-items-center rounded-full bg-accent-soft text-xs text-accent">{i + 1}</span>
+              {t}
+            </div>
+            <p className="mt-2 text-muted">{d}</p>
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }
