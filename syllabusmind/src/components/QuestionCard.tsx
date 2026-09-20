@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Confidence, Question } from '../engine/types';
 import type { AnswerResult } from '../store/useApp';
 import { Segmented } from './ui';
+import { wrongAnswerNote } from '../lib/feedback';
 
 const CONFS: { id: Confidence; label: string; hint: string }[] = [
   { id: 'low', label: 'Guessing', hint: 'I am not sure at all' },
@@ -102,6 +103,18 @@ export default function QuestionCard({
         })}
       </div>
 
+      {result && !result.correct && choice !== null && (() => {
+        const note = wrongAnswerNote(q, choice);
+        return note ? (
+          <div className="mt-5 rounded-[var(--radius-sm)] border border-[var(--bad-border)] bg-[var(--bad-bg)] p-4" role="status" aria-live="polite">
+            <div className="label !text-[var(--bad-text)]">Why that was wrong</div>
+            <p className="mt-2 text-sm"><b>Correct answer:</b> {note.correctAnswer}</p>
+            {note.explanation && <p className="mt-2 text-sm">{note.explanation}</p>}
+            {note.belief && <p className="mt-2 text-sm text-muted">Your answer suggests: {note.belief}</p>}
+          </div>
+        ) : null;
+      })()}
+
       {!result ? (
         <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -115,7 +128,7 @@ export default function QuestionCard({
       ) : (
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
           <span className={`text-base font-semibold ${result.correct ? 'text-[var(--ok-text)]' : 'text-[var(--bad-text)]'}`}>{result.correct ? 'Correct' : 'Not quite'}</span>
-          <button className="btn btn-primary !px-6 !py-3 !text-base" onClick={onNext} autoFocus>{nextLabel}</button>
+          <button className="btn btn-primary !px-6 !py-3 !text-base" onClick={onNext} autoFocus>{!result.correct && nextLabel === 'Next question' ? 'Continue' : nextLabel}</button>
         </div>
       )}
     </div>
