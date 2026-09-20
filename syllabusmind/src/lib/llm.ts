@@ -22,7 +22,7 @@ export const OPENAI_MODELS: Record<Task, string> = {
 export const OPENROUTER_MODELS: Record<Task, string> = {
   extract: 'nvidia/nemotron-3-super-120b-a12b:free',
   question: 'nvidia/nemotron-3-super-120b-a12b:free',
-  crosscheck: 'deepseek/deepseek-v4-flash-0731:free',
+  crosscheck: 'qwen/qwen3.8-27b:free',
   propagate: 'nvidia/nemotron-3-super-120b-a12b:free',
   rootcause: 'nvidia/nemotron-3-super-120b-a12b:free',
 };
@@ -35,9 +35,10 @@ export const DEFAULT_MODELS = OPENROUTER_MODELS;
  */
 export const PRICING: Record<string, { in: number; out: number }> = {
   'nvidia/nemotron-3-super-120b-a12b:free': { in: 0, out: 0 },
-  'deepseek/deepseek-v4-flash-0731:free': { in: 0, out: 0 },
+  'qwen/qwen3.8-27b:free': { in: 0, out: 0 },
   'gpt-4.1-mini': { in: 0.40, out: 1.60 },
   'gpt-4o-mini': { in: 0.15, out: 0.60 },
+  'openai/gpt-4o-mini': { in: 0.15, out: 0.60 }, // same model, OpenRouter's provider-prefixed slug
 };
 export const isPriced = (model: string) => model in PRICING;
 
@@ -104,7 +105,8 @@ export const hasUnpriced = () => Object.values(usage).some((u) => u.unpriced);
 /** "$0.0031" style, with enough decimals to show sub-cent amounts rather than rounding them to "$0.00". */
 export const formatCost = (n: number) => (n === 0 ? '$0' : n < 0.01 ? `$${n.toFixed(4)}` : `$${n.toFixed(2)}`);
 
-const retryModel = (primary: string) => (primary.endsWith(':free') ? (isOpenRouter() ? 'deepseek/deepseek-v4-flash-0731:free' : 'gpt-4o-mini') : primary);
+/** Escalate from a free (cheap, occasionally flaky) model to a real paid one on retry, never to another free model. */
+export const retryModel = (primary: string) => (primary.endsWith(':free') ? (isOpenRouter() ? 'openai/gpt-4o-mini' : 'gpt-4o-mini') : primary);
 
 async function callOnce(task: Task, prompt: string, model: string, maxTokens: number, timeoutMs: number): Promise<unknown> {
   const ctl = new AbortController();

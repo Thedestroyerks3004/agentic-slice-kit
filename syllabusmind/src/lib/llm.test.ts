@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { formatCost, generateJSON, getKey, getSimulateOffline, hasModel, hasUnpriced, isPriced, PRICING, setSimulateOffline, totalCost, usage } from './llm';
+import { formatCost, generateJSON, getKey, getSimulateOffline, hasModel, hasUnpriced, isPriced, OPENAI_MODELS, OPENROUTER_MODELS, PRICING, retryModel, setSimulateOffline, totalCost, usage } from './llm';
 import { getStage, onStageChange, setStage } from './agentStatus';
 
 describe('the simulate-offline toggle', () => {
@@ -42,10 +42,21 @@ describe('the visible agent status, on the no-key/offline path', () => {
 
 describe('the price table', () => {
   it('prices every model this app actually defaults to', () => {
-    for (const m of ['nvidia/nemotron-3-super-120b-a12b:free', 'deepseek/deepseek-v4-flash-0731:free', 'gpt-4.1-mini', 'gpt-4o-mini']) {
+    for (const m of ['nvidia/nemotron-3-super-120b-a12b:free', 'qwen/qwen3.8-27b:free', 'gpt-4.1-mini', 'gpt-4o-mini', 'openai/gpt-4o-mini']) {
       expect(isPriced(m)).toBe(true);
     }
     expect(isPriced('some-custom-model-nobody-priced')).toBe(false);
+  });
+  it('never defaults a task to a model missing from the price table (the class of bug that let a dead retry model slip in)', () => {
+    for (const m of Object.values(OPENROUTER_MODELS)) expect(isPriced(m)).toBe(true);
+    for (const m of Object.values(OPENAI_MODELS)) expect(isPriced(m)).toBe(true);
+  });
+  it('retries a free model on a real, priced paid model — never on another free model that might not exist', () => {
+    vi.stubGlobal('localStorage', { getItem: (k: string) => (k === 'sm.apiKey' ? 'sk-or-test-key' : null), setItem: () => {}, removeItem: () => {} });
+    const target = retryModel('nvidia/nemotron-3-super-120b-a12b:free');
+    expect(target).toBe('openai/gpt-4o-mini');
+    expect(isPriced(target)).toBe(true);
+    vi.unstubAllGlobals();
   });
   it('prices the free-tier OpenRouter defaults at exactly $0', () => {
     expect(PRICING['nvidia/nemotron-3-super-120b-a12b:free']).toEqual({ in: 0, out: 0 });
