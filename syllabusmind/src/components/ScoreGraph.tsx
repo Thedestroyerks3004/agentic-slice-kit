@@ -238,7 +238,7 @@ export default function ScoreGraph({ graph, beliefs, selectedId, focusIds, recom
   const checked = graph.nodes.filter((n) => (beliefs[n.id]?.answers ?? 0) >= 2).length;
   const total = graph.nodes.length;
   const circ = 2 * Math.PI * 14;
-  const showLegend = legendOpen ?? size.w >= 760;
+  const showLegend = legendOpen ?? size.w >= 1100; // closed by default so it never covers topics on the right
 
   return (
     <div ref={wrapRef} className="relative h-full w-full overflow-hidden rounded-[var(--radius)] bg-surface">
@@ -519,10 +519,12 @@ export default function ScoreGraph({ graph, beliefs, selectedId, focusIds, recom
           }
           ctx.globalAlpha = 1;
         }}
-        nodePointerAreaPaint={(node: any, color: string, ctx: CanvasRenderingContext2D) => {
+        nodePointerAreaPaint={(node: any, color: string, ctx: CanvasRenderingContext2D, scale: number) => {
+          // The map is zoomed out to fit, so small topics can be only a few pixels wide. Guarantee a finger-sized
+          // target (24px on screen) so every topic can be hovered and clicked, not just the big hubs.
           ctx.fillStyle = color;
           ctx.beginPath();
-          ctx.arc(node.x, node.y, node.r + 14, 0, 2 * Math.PI);
+          ctx.arc(node.x, node.y, Math.max(node.r + 14, 24 / scale), 0, 2 * Math.PI);
           ctx.fill();
         }}
       />
