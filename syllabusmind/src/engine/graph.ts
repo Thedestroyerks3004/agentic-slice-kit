@@ -1,4 +1,4 @@
-import type { ConceptGraph, ConceptNode } from './types';
+import type { ConceptEdge, ConceptGraph, ConceptNode } from './types';
 
 /** Prerequisite depth: 0 = root. Longest path from a root; cycle-safe. */
 export function depths(g: ConceptGraph): Record<string, number> {
@@ -68,4 +68,36 @@ export function layoutRadial(g: ConceptGraph, ring = 150): Record<string, { x: n
   // Start the sweep so a lone child of the root lands at the top of the ring.
   roots.forEach((r) => place(r, -1.5 * Math.PI, 0.5 * Math.PI));
   return pos;
+}
+
+/** Every topic that builds on this one, directly or indirectly. */
+export function unlocks(g: ConceptGraph, id: string): string[] {
+  const seen = new Set<string>();
+  const queue = [id];
+  while (queue.length) {
+    const cur = queue.pop()!;
+    for (const c of childrenOf(g, cur)) if (!seen.has(c)) {
+      seen.add(c);
+      queue.push(c);
+    }
+  }
+  return [...seen];
+}
+
+/* ---- what the map encodes ---- */
+
+/** A link at or above this weight is a hard prerequisite (solid); below it, helpful background (dashed). */
+export const HARD_EDGE = 0.7;
+export const isHardEdge = (e: ConceptEdge) => e.weight >= HARD_EDGE;
+
+/** A topic where several lines of learning meet (two or more prerequisites). Drawn as a hexagon. */
+export const isCheckpoint = (g: ConceptGraph, id: string) => parentsOf(g, id).length >= 2;
+
+/**
+ * How much of the course leans on a topic: everything that builds on it, directly or not, plus the weighted
+ * strength of its own links. A hub reads as a big node, a leaf as a small one.
+ */
+export function importance(g: ConceptGraph, id: string): number {
+  const links = g.edges.filter((e) => e.from === id || e.to === id).reduce((s, e) => s + e.weight, 0);
+  return 1 + unlocks(g, id).length + 0.8 * links;
 }

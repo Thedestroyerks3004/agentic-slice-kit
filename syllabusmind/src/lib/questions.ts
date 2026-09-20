@@ -35,6 +35,7 @@ export function parseQuestion(nodeId: string, q: unknown, id: string): Question 
   return {
     id, nodeId, kind: 'probe', text: q.text.trim(), options: s.options, correctIndex: s.correctIndex,
     misconceptions: s.tags[0], beliefs: s.tags[1],
+    explanation: typeof q.explanation === 'string' && q.explanation.trim() ? q.explanation.trim().slice(0, 320) : undefined,
     level: q.level === 1 || q.level === 2 || q.level === 3 ? q.level : undefined,
     source: 'live',
   };
@@ -57,9 +58,9 @@ Prerequisite topics: ${names(prereqs)}. Topics that build on it: ${names(depende
 Questions must be about "${node.label}" itself; use the neighbouring topics only for context.`;
 }
 
-const OPTION_RULES = `Every question has exactly 4 distinct options and exactly one correct option. Every WRONG option must be a plausible distractor that reveals ONE specific wrong belief a student might hold: give it a snake_case "m_..." id in misconceptionIds and a short plain-words statement of that belief in beliefs (for example "Believes any blocked transaction is a deadlock"). The correct option has null in both arrays. Keep each question under 45 words and each option under 18 words. Vary the position of the correct option. Do not deliberate at length: output the JSON directly.`;
+const OPTION_RULES = `Every question has exactly 4 distinct options and exactly one correct option. Every WRONG option must be a plausible distractor that reveals ONE specific wrong belief a student might hold: give it a snake_case "m_..." id in misconceptionIds and a short plain-words statement of that belief in beliefs (for example "Believes any blocked transaction is a deadlock"). The correct option has null in both arrays. Also give each question an "explanation": one or two plain sentences saying why the correct option is right and where the most tempting wrong option goes wrong. Keep each question under 45 words and each option under 18 words. Vary the position of the correct option. Do not deliberate at length: output the JSON directly.`;
 
-const SHAPE = `{"level":1|2|3,"text":string,"options":[4 strings],"correctIndex":0-3,"misconceptionIds":[4 entries],"beliefs":[4 entries]}`;
+const SHAPE = `{"level":1|2|3,"text":string,"options":[4 strings],"correctIndex":0-3,"misconceptionIds":[4 entries],"beliefs":[4 entries],"explanation":string}`;
 
 const diagnosticPrompt = (graph: ConceptGraph, node: ConceptNode) => `${context(graph, node)}
 Write exactly 2 multiple-choice questions for a quick diagnostic: first a level 1 question (recall of a definition or fact), then a level 2 question (apply the idea to a small concrete scenario).

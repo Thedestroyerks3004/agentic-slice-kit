@@ -28,6 +28,9 @@ export interface NodeBelief {
   confidentWrong: number;
   verified: boolean;
   reopened?: boolean; // failed a contrast check while looking solid: capped at Shaky until it passes one
+  reopenCount?: number; // how many times this topic has been reopened this session — a revision counter,
+  // separate from and never shared with llm.ts's `timeouts` (a network-spend counter). Capped at
+  // MAX_REOPENS: once hit, a failed discriminating question still logs the finding but no longer reopens.
 }
 
 export type QuestionKind = 'diagnostic' | 'probe' | 'contrast';
@@ -43,6 +46,7 @@ export interface Question {
   beliefs?: (string | null)[]; // per option: the belief in plain words
   pairId?: string; // contrast pair: a discriminating question and its control share this id
   role?: 'discriminating' | 'control';
+  explanation?: string; // one or two sentences: why the correct option is right and where the tempting wrong one fails
   source?: 'live' | 'backup' | 'rehearsed';
 }
 
@@ -62,6 +66,9 @@ export interface AnswerEntry {
   phase: 'diagnostic' | 'deepdive';
   misconceptionId?: string;
   belief?: string;
+  correctAnswer?: string; // the text of the right option, so a miss can be explained later
+  explanation?: string;
+  source?: 'live' | 'backup' | 'rehearsed'; // where this question came from, for the exported audit trail
 }
 export interface ReopenEvent {
   type: 'reopen';

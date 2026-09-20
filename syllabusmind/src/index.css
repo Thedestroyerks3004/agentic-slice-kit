@@ -1,6 +1,9 @@
 @import 'tailwindcss';
 
 @theme inline {
+  /* type scale: 12 / 14 / 16 / 20 / 32 */
+  --text-3xl: 2rem;
+  --text-3xl--line-height: 1.15;
   --color-bg: var(--bg);
   --color-surface: var(--surface);
   --color-surface-alt: var(--surface-alt);
@@ -125,4 +128,78 @@ h3 {
   .banner-in {
     animation: none;
   }
+}
+
+
+/* ---- one component language ---- */
+
+/* Primary action: the same saturated accent everywhere. Grey only while it cannot be used. */
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+  filter: none;
+}
+.btn-primary:disabled {
+  background: var(--disabled);
+  border-color: var(--disabled);
+  color: #fff;
+  opacity: 1;
+}
+
+/* A choice: an answer option, a confidence level, a filter, a view. One hover and one selected treatment. */
+.choice {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+.choice:hover:not(:disabled):not([aria-checked='true']):not([aria-pressed='true']):not([aria-selected='true']) {
+  border-color: var(--accent);
+  background: var(--surface-alt);
+}
+.choice[aria-checked='true'],
+.choice[aria-pressed='true'],
+.choice[aria-selected='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent) inset;
+}
+.choice:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.choice:disabled {
+  cursor: default;
+}
+
+/* Progress: one look, wherever it appears. */
+.progress {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--track);
+  overflow: hidden;
+}
+.progress > div {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+
+/* Navigation is a quiet link; bordered buttons are for real actions (export, evidence, go deeper). */
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-muted);
+}
+.btn-ghost:hover:not(:disabled) {
+  background: var(--surface-alt);
+  color: var(--text);
 }

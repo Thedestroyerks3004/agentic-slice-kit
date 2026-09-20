@@ -43,6 +43,15 @@ export const DBMS_GRAPH: ConceptGraph = {
   ],
 };
 
+/** Unit names, in syllabus order. The graph colours each unit with its own theme token. */
+export const UNITS: { id: string; name: string }[] = [
+  { id: 'I', name: 'Relational basics' },
+  { id: 'II', name: 'Database design' },
+  { id: 'III', name: 'Transactions' },
+  { id: 'IV', name: 'Implementation' },
+  { id: 'V', name: 'Advanced topics' },
+];
+
 /** The nodes whose final contrast pair is pre-written so the rehearsed backward loop never depends on a live call. */
 export const TRIGGER_NODES = ['concurrency_control', 'query_optimization'] as const;
 

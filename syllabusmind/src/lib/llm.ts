@@ -30,7 +30,21 @@ export const DEFAULT_MODELS = OPENROUTER_MODELS;
 const real = (k: string) => (/^sk-/.test(k.trim()) ? k.trim() : ''); // ignores the .env.local placeholder
 /** Key order: VITE_OPENAI_API_KEY from .env.local (baked into the bundle), then Settings. */
 const ENV_KEY = real((import.meta.env.VITE_OPENAI_API_KEY as string | undefined) ?? '');
+
+/**
+ * Session-only "simulate offline" switch, for demoing the backup path on demand. It is checked before
+ * ENV_KEY or the Settings key, so it forces every call onto backup regardless of what's configured —
+ * no restart needed, since a baked-in .env.local key would otherwise always win. Not persisted: it
+ * resets to false on reload, so a demo never accidentally stays offline.
+ */
+let offline = false;
+export const getSimulateOffline = () => offline;
+export const setSimulateOffline = (v: boolean) => {
+  offline = v;
+};
+
 export const getKey = () => {
+  if (offline) return '';
   if (ENV_KEY) return ENV_KEY;
   try {
     return real(localStorage.getItem(LS_KEY) || '');

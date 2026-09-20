@@ -18,6 +18,14 @@ export default function App() {
   const { student, deep } = useApp();
 
   useEffect(() => {
+    if (student && !location.hash) {
+      location.hash = '/graph';
+      setRoute('graph');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     const f = () => setRoute(read());
     window.addEventListener('hashchange', f);
     return () => window.removeEventListener('hashchange', f);
