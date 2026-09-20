@@ -66,7 +66,7 @@ export default function Report({ go }: { go: (r: Route) => void }) {
     const url = URL.createObjectURL(new Blob([JSON.stringify({ student, beliefs, log }, null, 2)], { type: 'application/json' }));
     const a = document.createElement('a');
     a.href = url;
-    a.download = `syllabusmind-${student?.roll ?? 'session'}.json`;
+    a.download = `skillmind-${student?.roll ?? 'session'}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };

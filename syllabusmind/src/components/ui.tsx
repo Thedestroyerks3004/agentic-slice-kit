@@ -17,8 +17,7 @@ const STEPS: { id: Route; label: string }[] = [
 ];
 
 export function NavBar({ route, go }: { route: Route; go: (r: Route) => void }) {
-  const { student, signOut, diagnosticDone, setCheckOnly } = useApp();
-  const inQuiz = route === 'diagnostic' || route === 'deepdive';
+  const { student, signOut, diagnosticDone } = useApp();
   const doneStep = (r: Route) => (r === 'intake' ? !!student : r === 'diagnostic' ? diagnosticDone : false);
   const [settings, setSettings] = useState(false);
   const enabled = (r: Route) => r === 'intake' || !!student;
@@ -26,9 +25,8 @@ export function NavBar({ route, go }: { route: Route; go: (r: Route) => void }) 
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-surface/90 backdrop-blur">
       <div className="mx-auto flex max-w-[1400px] items-center gap-6 px-5 py-3">
-        <button onClick={() => go(student ? 'graph' : 'intake')} className="flex items-center gap-2" aria-label="SyllabusMind home">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-accent text-sm font-bold text-white">S</span>
-          <span className="font-display text-xl font-bold">SyllabusMind</span>
+        <button onClick={() => go(student ? 'graph' : 'intake')} className="flex items-center gap-2" aria-label="SkillMind home">
+          <span className="rounded-md bg-ink px-2.5 py-1 font-display text-xl font-bold leading-none" aria-label="SkillMind"><span className="text-white">Skill</span><span className="text-[var(--brand)]">Mind</span></span>
         </button>
         <nav aria-label="Progress" className="hidden flex-1 items-center gap-1 md:flex">
           {STEPS.map((s, i) => (
@@ -46,11 +44,6 @@ export function NavBar({ route, go }: { route: Route; go: (r: Route) => void }) 
             </button>
           ))}
         </nav>
-        {inQuiz && (
-          <button className="btn btn-ghost" onClick={() => { setCheckOnly(null); go('graph'); }} title="Your answers are saved. You can pick this up again from the map.">
-            ← Exit to map
-          </button>
-        )}
         <div className="ml-auto flex items-center gap-2 text-sm">
           {student && <span className="chip hidden sm:inline-flex">{student.name} · {student.roll}</span>}
           <ModeBadge />

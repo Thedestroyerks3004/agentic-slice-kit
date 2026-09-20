@@ -107,7 +107,7 @@ async function callOnce(task: Task, prompt: string, model: string, maxTokens: nu
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${getKey()}`,
-        ...(isOpenRouter() ? { 'X-Title': 'SyllabusMind' } : {}),
+        ...(isOpenRouter() ? { 'X-Title': 'SkillMind' } : {}),
       },
       body: JSON.stringify({
         model,

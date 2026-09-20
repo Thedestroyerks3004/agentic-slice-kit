@@ -63,9 +63,14 @@ export default function Diagnostic({ go }: { go: (r: Route) => void }) {
         title={single ? `Check: ${single.label}` : 'Quick check'}
         sub={single ? 'Two questions on this topic. Your answers colour it on the map.' : 'Two questions per topic, starting at the foundations.'}
         right={
-          <button className="btn" aria-pressed={showMap} onClick={() => setShowMap(!showMap)}>
-            {showMap ? 'Hide map' : 'View map'}
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button className="btn" aria-pressed={showMap} onClick={() => setShowMap(!showMap)}>
+              {showMap ? 'Hide map' : 'View map'}
+            </button>
+            <button className="btn btn-ghost" onClick={() => { setCheckOnly(null); go('graph'); }} title="Your answers are saved. You can pick this up again from the map.">
+              ← Exit to map
+            </button>
+          </div>
         }
       />
       <StoreNotice />

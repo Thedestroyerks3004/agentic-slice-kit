@@ -36,6 +36,7 @@ export const theme = {
   stateSolid: '#2f9e5b',
   stateVerified: '#c99a06',
   danger: '#e03131',
+  brand: '#a78bfa', // the purple in the SkillMind wordmark, used nowhere else
   // graph
   edge: '#b9b5a8',
   edgePulse: '#3b5bdb',

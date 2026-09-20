@@ -6,7 +6,7 @@ import { Banner, PageHeader, ProgressBar, StateChip, StoreNotice, type Route } f
 import { deriveState, mastery, newBelief } from '../engine/mastery';
 
 export default function DeepDive({ go }: { go: (r: Route) => void }) {
-  const { deep, beliefs, answer, advanceDeep, endDeepDive } = useApp();
+  const { deep, beliefs, answer, advanceDeep, endDeepDive, setCheckOnly } = useApp();
   const startMastery = useRef(deep ? mastery(beliefs[deep.nodeId] ?? newBelief()) : 0);
   const [showMap, setShowMap] = useState(() => {
     try {
@@ -40,9 +40,14 @@ export default function DeepDive({ go }: { go: (r: Route) => void }) {
         title={`Go deeper: ${node.label}`}
         sub="A fresh set of questions on this topic. They get harder after a right answer and easier after a wrong one."
         right={
-          <button className="btn" aria-pressed={showMap} onClick={toggleMap}>
-            {showMap ? 'Hide map' : 'View map'}
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button className="btn" aria-pressed={showMap} onClick={toggleMap}>
+              {showMap ? 'Hide map' : 'View map'}
+            </button>
+            <button className="btn btn-ghost" onClick={() => { setCheckOnly(null); go('graph'); }} title="Your answers are saved. You can pick this up again from the map.">
+              ← Exit to map
+            </button>
+          </div>
         }
       />
       <Banner />
