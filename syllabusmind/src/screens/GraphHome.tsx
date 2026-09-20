@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { GRAPH, useApp } from '../store/useApp';
 import ScoreGraph from '../components/ScoreGraph';
-import { Alert, EvidenceList, PageHeader, ProgressBar, Segmented, StateChip, StoreNotice, type Route } from '../components/ui';
+import { Alert, AgentStatus, EvidenceList, PageHeader, ProgressBar, Segmented, StateChip, StoreNotice, type Route } from '../components/ui';
 import { deriveState, isDanger, mastery, newBelief } from '../engine/mastery';
 import { neighborhood, unlocks } from '../engine/graph';
 import { summarizeEvidence } from '../lib/evidence';
@@ -183,6 +183,7 @@ export default function GraphHome({ go }: { go: (r: Route) => void }) {
                     </button>
                     <button className="btn" onClick={() => setSel(rec.nodeId)}>View topic</button>
                   </div>
+                  {busy && <AgentStatus className="mt-2" />}
                 </div>
               ) : (
                 <div className="rounded-[var(--radius)] border border-border bg-surface-alt p-4">
@@ -234,6 +235,7 @@ export default function GraphHome({ go }: { go: (r: Route) => void }) {
               <button className="btn mt-4 w-full" disabled={!!busy} onClick={() => act(node.id, b.answers === 0 ? 'check' : 'deeper')}>
                 {busy ?? (b.answers === 0 ? 'Check this topic · 2 questions' : 'Go deeper · about 8 questions')}
               </button>
+              {busy && <AgentStatus className="mt-2" />}
 
               <Chips title="Prerequisites" ids={near?.prereqs.map((n) => n.id) ?? []} />
               <Chips title="Unlocks" ids={near?.dependents.map((n) => n.id) ?? []} />

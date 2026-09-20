@@ -4,6 +4,7 @@
  * score or a state; those live in src/engine.
  */
 import { tolerantParse } from './json';
+import { setStage } from './agentStatus';
 
 export type Task = 'extract' | 'question' | 'crosscheck' | 'propagate' | 'rootcause';
 
@@ -74,7 +75,7 @@ const bump = (task: string, tokens = 0, fallback = false) => {
   u.calls += fallback ? 0 : 1;
   u.tokens += tokens;
   u.fallbacks += fallback ? 1 : 0;
-  window.dispatchEvent(new Event('sm-usage'));
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event('sm-usage')); // no window under node (tests)
 };
 
 const retryModel = (primary: string) => (primary.endsWith(':free') ? (isOpenRouter() ? 'deepseek/deepseek-v4-flash-0731:free' : 'gpt-4o-mini') : primary);
@@ -141,11 +142,16 @@ export async function generateJSON<T>(opts: {
   if (stopped) error = `${stopped}; using the backup set`;
   if (hasModel() && !stopped) {
     const primary = opts.model ?? getModels()[opts.task];
+    let attempt = 0;
     for (const model of [primary, retryModel(primary)]) {
+      setStage(attempt++ === 0 ? 'asking' : 'retrying');
       try {
-        const v = opts.validate(await callOnce(opts.task, opts.prompt, model, opts.maxTokens ?? 2500, opts.timeoutMs ?? 120000));
+        const reply = await callOnce(opts.task, opts.prompt, model, opts.maxTokens ?? 2500, opts.timeoutMs ?? 120000);
+        setStage('checking');
+        const v = opts.validate(reply);
         if (v) {
           timeouts = 0;
+          setStage('ready');
           return { value: v, live: true };
         }
         error = 'the model reply did not match the expected format';
@@ -162,6 +168,9 @@ export async function generateJSON<T>(opts: {
       }
     }
   }
+  setStage('backup');
   bump(opts.task, 0, true);
-  return { value: opts.fallback(), live: false, error };
+  const value = opts.fallback();
+  setStage('ready');
+  return { value, live: false, error };
 }

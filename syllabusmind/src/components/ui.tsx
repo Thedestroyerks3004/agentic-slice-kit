@@ -5,6 +5,7 @@ import { getKey, getModels, getSimulateOffline, isOpenRouter, setKey, setModels,
 import { GRAPH, useApp } from '../store/useApp';
 import { evidenceFor } from '../lib/evidence';
 import { noticeView, type AlertVariant } from '../lib/notice';
+import { getStage, onStageChange, STAGE_LABEL, type AgentStage } from '../lib/agentStatus';
 
 export type Route = 'intake' | 'graph' | 'diagnostic' | 'deepdive' | 'report';
 
@@ -188,6 +189,39 @@ export function StoreNotice({ className = 'mb-4' }: { className?: string }) {
     <Alert variant={v.variant} title={v.title} onDismiss={clearNotice} className={className}>
       {v.body}
     </Alert>
+  );
+}
+
+function useAgentStage(): AgentStage {
+  const [stage, setS] = useState<AgentStage>(getStage());
+  useEffect(() => onStageChange(() => setS(getStage())), []);
+  return stage;
+}
+
+/**
+ * A visible line of what the agent is doing right now — asking a model, checking its reply, retrying,
+ * or falling back — instead of a bare spinner. Shows while a stage is live, then a brief "Ready" before
+ * it clears itself, so the last thing shown always matches what actually happened. `fallback` is the
+ * text shown before any stage has fired yet (e.g. the very first render of a loading screen).
+ */
+export function AgentStatus({ fallback, className = '' }: { fallback?: string; className?: string }) {
+  const stage = useAgentStage();
+  const [visible, setVisible] = useState(!!stage);
+  useEffect(() => {
+    if (stage) setVisible(true);
+    if (stage === 'ready') {
+      const t = setTimeout(() => setVisible(false), 900);
+      return () => clearTimeout(t);
+    }
+  }, [stage]);
+  if (!visible && !fallback) return null;
+  const label = visible && stage ? STAGE_LABEL[stage] : fallback;
+  return (
+    <div className={`flex items-center gap-2 text-sm text-muted ${className}`} role="status" aria-live="polite">
+      {(!stage || stage !== 'ready') && <span className="agent-pulse" aria-hidden />}
+      {stage === 'ready' && <span aria-hidden>✓</span>}
+      <span>{label}</span>
+    </div>
   );
 }
 

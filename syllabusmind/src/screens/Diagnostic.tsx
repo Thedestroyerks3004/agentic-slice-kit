@@ -3,7 +3,7 @@ import { GRAPH, useApp } from '../store/useApp';
 import type { Question } from '../engine/types';
 import QuestionCard from '../components/QuestionCard';
 import ScoreGraph from '../components/ScoreGraph';
-import { PageHeader, ProgressBar, StoreNotice, type Route } from '../components/ui';
+import { AgentStatus, PageHeader, ProgressBar, StoreNotice, type Route } from '../components/ui';
 
 const useShowMap = () => {
   const [show, setShow] = useState(() => {
@@ -80,7 +80,9 @@ export default function Diagnostic({ go }: { go: (r: Route) => void }) {
       <div className={`grid gap-5 ${showMap ? 'lg:grid-cols-[minmax(0,2.6fr)_minmax(0,1fr)]' : ''}`}>
         <div className={showMap ? '' : 'mx-auto w-full max-w-3xl'}>
           {loading || !q || !node ? (
-            <div className="card p-8 text-muted">Preparing your questions…</div>
+            <div className="card p-8">
+              <AgentStatus fallback="Preparing your questions…" />
+            </div>
           ) : (
             <QuestionCard q={q} topic={node.label} caption={`Question ${inTopic} of 2`} onSubmit={(c, conf) => answer(q, c, conf, 'diagnostic')} onNext={load} />
           )}

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { GRAPH, useApp } from '../store/useApp';
-import { Alert, Donut, EvidenceList, PageHeader, type Route } from '../components/ui';
+import { Alert, AgentStatus, Donut, EvidenceList, PageHeader, type Route } from '../components/ui';
 import { buildReport, evidenceDetail, type ReportRow } from '../lib/report';
 import { buildFacts, factsSignature, fallbackInsights, generateInsights, insightCache, type Insights } from '../lib/insights';
 import { hasModel, modelPaused } from '../lib/llm';
@@ -161,8 +161,9 @@ export default function Report({ go }: { go: (r: Route) => void }) {
 
       {/* The agent's one-line read of the whole result */}
       <section className="mb-3 rounded-[var(--radius-sm)] border border-border bg-surface px-4 py-3" style={{ borderLeft: '4px solid var(--accent)' }} aria-label="Takeaway">
-        <div className="label mb-0.5">{ins.source === 'agent' ? 'Agent’s read' : 'Summary'}{refining && <span className="ml-2 font-normal normal-case text-muted">refining…</span>}</div>
+        <div className="label mb-0.5">{ins.source === 'agent' ? 'Agent’s read' : 'Summary'}</div>
         <p className="text-base font-medium leading-snug">{ins.takeaway}</p>
+        {refining && <AgentStatus className="mt-1.5" fallback="Refining this read…" />}
       </section>
 
       {ins.scoreNote && <p className="mb-3 px-1 text-sm text-muted">{ins.scoreNote}</p>}
