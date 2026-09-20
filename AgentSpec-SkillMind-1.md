@@ -1,4 +1,4 @@
-# AgentSpec — SyllabusMind (MICRO-Lite)
+# AgentSpec — SkillMind (MICRO-Lite)
 
 > **How this diverged from the spec.** The build that shipped differs from this document in domain
 > (DBMS, not OS/Deadlocks), in scoring (Beta-distribution mastery per topic, not named hypothesis
@@ -170,7 +170,7 @@ Beats, following the walkthrough in Section 4 directly: (1) one-sentence framing
 
 ## 14. How This Grows — OPTIONAL, YOUR USE
 
-Automatic graph generation becomes viable once there's a curated graph to validate LLM suggestions against, rather than trusting them outright. PDF/OCR syllabus ingestion and multiple subjects are a parsing-and-scale problem layered on top of an already-working diagnostic loop, not a prerequisite for it. A true information-gain-based MICRO engine (Bayesian updating, expected-value probe selection) replaces the fixed-weight rules here once there's a real question bank large enough to make that worth building. Connecting to a GitHub-based skill-verification layer — treating a student's own code as an additional evidence source alongside syllabus answers — is a later integration, not part of this build, and keeps SyllabusMind's diagnostic core independent of it.
+Automatic graph generation becomes viable once there's a curated graph to validate LLM suggestions against, rather than trusting them outright. PDF/OCR syllabus ingestion and multiple subjects are a parsing-and-scale problem layered on top of an already-working diagnostic loop, not a prerequisite for it. A true information-gain-based MICRO engine (Bayesian updating, expected-value probe selection) replaces the fixed-weight rules here once there's a real question bank large enough to make that worth building. Connecting to a GitHub-based skill-verification layer — treating a student's own code as an additional evidence source alongside syllabus answers — is a later integration, not part of this build, and keeps SkillMind's diagnostic core independent of it.
 
 ## 15. What You Are Least Sure About — REQUIRED, JUDGED
 

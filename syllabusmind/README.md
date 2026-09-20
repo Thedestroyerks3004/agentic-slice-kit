@@ -1,4 +1,4 @@
-# SyllabusMind: DBMS MVP
+# SkillMind: DBMS MVP
 
 A fixed 14-topic DBMS concept graph. The agent finds where a student is weak, says so plainly, and generates a fresh set of questions on whichever topic they pick.
 

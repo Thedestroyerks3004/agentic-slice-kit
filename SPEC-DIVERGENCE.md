@@ -1,7 +1,7 @@
-# Spec divergence — SyllabusMind
+# Spec divergence — SkillMind
 
-`AgentSpec-SyllabusMind-1.md` describes the plan as it stood on 15 September 2026. The build that
-actually shipped in `syllabusmind/` diverged from it in three places. This is a documented pivot, not
+`AgentSpec-SkillMind-1.md` describes the plan as it stood on 15 September 2026. The build that
+actually shipped in `skillmind/` diverged from it in three places. This is a documented pivot, not
 an oversight: as ON-THE-DAY.md puts it, changing your mind because you learned something during the
 build is a finding, not a failure. Here is what changed and why.
 
@@ -59,4 +59,4 @@ The evidence-gated backward transition, deterministic (non-model) scoring, typed
 outputs, and per-student persisted state across sessions were all spec requirements the build kept.
 
 See `PRE-EVENT-ASSETS.md` for what was brought into the build from before the event, including the
-domain/authorship mismatch between this document and `AgentSpec-SyllabusMind-1.md`.
+domain/authorship mismatch between this document and `AgentSpec-SkillMind-1.md`.

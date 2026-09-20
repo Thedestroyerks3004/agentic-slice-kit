@@ -14,9 +14,9 @@ syllabus. They framed it as future work.
 Nothing in the shipped app. This is a roadmap item and is recorded honestly as not built.
 
 - The shipped app covers one subject, Database Management Systems. Its 14-topic graph is hand-written in
-  `syllabusmind/src/lib/dbmsGraph.ts`. It does not read uploaded files.
+  `skillmind/src/lib/dbmsGraph.ts`. It does not read uploaded files.
 - An earlier, larger build did include PDF and OCR syllabus upload. It is kept only for reference in
-  `syllabusmind/archive/full-scope/` and is not part of the submission. `PRE-EVENT-ASSETS.md` and
+  `skillmind/archive/full-scope/` and is not part of the submission. `PRE-EVENT-ASSETS.md` and
   `SPEC-DIVERGENCE.md` explain why the scope was cut.
 
 ## How we would approach it

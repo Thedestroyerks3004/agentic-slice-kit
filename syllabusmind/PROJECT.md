@@ -1,4 +1,4 @@
-# SyllabusMind — Project Documentation
+# SkillMind — Project Documentation
 
 A diagnostic tool for one fixed Database Management Systems (DBMS) syllabus. A student answers questions on a
 radial concept graph; the app scores their mastery of each topic deterministically (the model never scores

@@ -1,4 +1,4 @@
-# SyllabusMind
+# SkillMind
 
 Pick a syllabus, get a concept graph, take an adaptive diagnostic, and see which topics are weak or solid and why.
 

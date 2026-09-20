@@ -4,7 +4,6 @@ import { MAX_REOPENS, deriveState, mastery, newBelief, shouldReopen, updateBelie
 import { diagnosticOrder } from '../engine/graph';
 import { DBMS_GRAPH } from '../lib/dbmsGraph';
 import { generateDeep, generateDiagnostic } from '../lib/questions';
-import { hasModel } from '../lib/llm';
 import { persistence } from '../lib/persist';
 
 export const GRAPH = DBMS_GRAPH;
@@ -79,7 +78,6 @@ function diagFor(nodeId: string): Promise<Question[]> {
       }
       useApp.setState((s) => ({
         diagQs: { ...s.diagQs, [nodeId]: r.questions },
-        notice: r.source === 'backup' && !s.notice ? backupNotice(r.error) : s.notice,
       }));
       inflight.delete(nodeId);
       return r.questions;
@@ -88,11 +86,6 @@ function diagFor(nodeId: string): Promise<Question[]> {
   }
   return p;
 }
-
-const backupNotice = (error?: string) =>
-  hasModel()
-    ? `Live question generation failed (${error ?? 'unknown error'}). Some topics use the pre-written backup questions.`
-    : 'No API key found, so questions come from the pre-written backup set. Put a key in .env.local for freshly generated questions.';
 
 /** On page load, pick up the student who was here last, so a refresh does not throw their progress away. */
 const restored = (() => {
@@ -212,7 +205,6 @@ export const useApp = create<AppState>((set, get) => ({
       set({ notice: 'No questions available for this topic.' });
       return false;
     }
-    if (r.source === 'backup') set({ notice: backupNotice(r.error) });
     set({ deep: { nodeId, queue: r.questions, idx: 0, source: r.source } });
     return true;
   },

@@ -61,7 +61,7 @@ async function ask<T>(label: string, prompt: string, validate: (x: unknown) => T
       calls++;
       const res = await fetch(OR ? 'https://openrouter.ai/api/v1/chat/completions' : 'https://api.openai.com/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${KEY}`, ...(OR ? { 'X-Title': 'SyllabusMind build' } : {}) },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${KEY}`, ...(OR ? { 'X-Title': 'SkillMind build' } : {}) },
         body: JSON.stringify({
           model, temperature: 0.3, max_tokens: maxTokens, response_format: { type: 'json_object' },
           messages: [{ role: 'system', content: 'Reply with a single JSON object only. No prose, no markdown fences.' }, { role: 'user', content: prompt }],

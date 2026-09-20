@@ -23,9 +23,9 @@ export function NavBar({ route, go }: { route: Route; go: (r: Route) => void }) 
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-surface/90 backdrop-blur">
       <div className="mx-auto flex max-w-[1400px] items-center gap-6 px-5 py-3">
-        <button onClick={() => go(snap ? 'graph' : 'intake')} className="flex items-center gap-2" aria-label="SyllabusMind home">
+        <button onClick={() => go(snap ? 'graph' : 'intake')} className="flex items-center gap-2" aria-label="SkillMind home">
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-accent text-sm font-bold text-white">S</span>
-          <span className="font-display text-lg font-bold">SyllabusMind</span>
+          <span className="font-display text-lg font-bold">SkillMind</span>
         </button>
         <nav aria-label="Progress" className="hidden flex-1 items-center gap-1 md:flex">
           {STEPS.map((s, i) => (

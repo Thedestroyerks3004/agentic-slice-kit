@@ -1,6 +1,6 @@
 # Tester feedback
 
-Four testers reviewed SyllabusMind. One file each, with their review, what we changed, and what is still open.
+Four testers reviewed SkillMind. One file each, with their review, what we changed, and what is still open.
 
 | Tester | Main point | Outcome |
 |---|---|---|

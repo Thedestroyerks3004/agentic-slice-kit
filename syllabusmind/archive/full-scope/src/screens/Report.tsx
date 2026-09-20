@@ -36,7 +36,7 @@ export default function Report({ go }: { go: (r: Route) => void }) {
     const url = URL.createObjectURL(new Blob([JSON.stringify(snap, null, 2)], { type: 'application/json' }));
     const a = document.createElement('a');
     a.href = url;
-    a.download = `syllabusmind-${snap.session.rollNumber}.json`;
+    a.download = `skillmind-${snap.session.rollNumber}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };

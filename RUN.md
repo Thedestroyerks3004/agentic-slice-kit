@@ -1,12 +1,12 @@
-# Put your OpenRouter or OpenAI key in syllabusmind/.env.local as:  VITE_OPENAI_API_KEY=sk-...
+# Put your OpenRouter or OpenAI key in skillmind/.env.local as:  VITE_OPENAI_API_KEY=sk-...
 # Then open http://localhost:5173 in a browser.
-npm --prefix syllabusmind install && npm --prefix syllabusmind run dev
+npm --prefix skillmind install && npm --prefix skillmind run dev
 
 ---
 
-# How to run SyllabusMind, in detail
+# How to run SkillMind, in detail
 
-SyllabusMind is a browser app (React, TypeScript, Vite). It has no server of its own. The browser calls the
+SkillMind is a browser app (React, TypeScript, Vite). It has no server of its own. The browser calls the
 model provider directly, using the key you put in `.env.local`.
 
 ## 1. What you need
@@ -17,10 +17,10 @@ model provider directly, using the key you put in `.env.local`.
 
 ## 2. Add your key (once)
 
-Create the file `syllabusmind/.env.local`. Start from the template:
+Create the file `skillmind/.env.local`. Start from the template:
 
 ```
-cp syllabusmind/.env.example syllabusmind/.env.local
+cp skillmind/.env.example skillmind/.env.local
 ```
 
 Then edit it so it contains:
@@ -45,11 +45,11 @@ VITE_MODEL=
 From the repository root (the folder that contains `.git`):
 
 ```
-npm --prefix syllabusmind install
-npm --prefix syllabusmind run dev
+npm --prefix skillmind install
+npm --prefix skillmind run dev
 ```
 
-Or as one command: `npm --prefix syllabusmind install && npm --prefix syllabusmind run dev`.
+Or as one command: `npm --prefix skillmind install && npm --prefix skillmind run dev`.
 
 Open **http://localhost:5173**. If that port is busy, Vite prints the port it chose instead.
 
@@ -79,9 +79,9 @@ Run these from the repository root.
 
 | Purpose | Command |
 |---|---|
-| Unit tests | `npm --prefix syllabusmind test` |
-| Type-check and production build | `npm --prefix syllabusmind run build` |
-| Serve the production build | `npm --prefix syllabusmind run preview` |
+| Unit tests | `npm --prefix skillmind test` |
+| Type-check and production build | `npm --prefix skillmind run build` |
+| Serve the production build | `npm --prefix skillmind run preview` |
 
 ## 7. If something goes wrong
 
@@ -90,5 +90,5 @@ Run these from the repository root.
 | Header says **Backup questions** | No key found, or the model is paused after errors. Check `.env.local`, restart the server, and see the badge tooltip. |
 | "Key rejected" or "out of credit" notice | The key is wrong or the account has no credit. Fix it and restart the server. |
 | Live calls often fall back to backup on the free model | The free tier is slow at busy times. Set `VITE_MODEL` to a paid model and restart. |
-| `npm` cannot find `syllabusmind` | You are not in the repository root. |
+| `npm` cannot find `skillmind` | You are not in the repository root. |
 | Port 5173 is in use | Vite picks the next port and prints it. Use that address. |
