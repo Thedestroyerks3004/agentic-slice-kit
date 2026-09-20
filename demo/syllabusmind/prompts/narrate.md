@@ -1,3 +1,0 @@
-# narrate prompt
-
-(placeholder)

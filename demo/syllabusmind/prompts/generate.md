@@ -1,3 +1,0 @@
-# generate prompt
-
-(placeholder)
