@@ -16,8 +16,9 @@ const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`;
 export default function GraphHome({ go }: { go: (r: Route) => void }) {
   const { beliefs, log, diagnosticDone, startDeepDive, setCheckOnly, busy, notice, deep, endDeepDive } = useApp();
   const [sel, setSel] = useState<string | null>(null);
-  const [view, setView] = useState<'map' | 'list'>('map');
+  const [view, setView] = useState<'map' | 'list'>('list');
   const [unit, setUnit] = useState<string | null>(null);
+  const [toggled, setToggled] = useState<Record<string, boolean>>({}); // a unit the student opened or closed by hand
 
   const bOf = (id: string) => beliefs[id] ?? newBelief();
   const stateOf = (id: string) => deriveState(bOf(id));
@@ -33,6 +34,9 @@ export default function GraphHome({ go }: { go: (r: Route) => void }) {
   const node = GRAPH.nodes.find((n) => n.id === sel);
   const b = node ? bOf(node.id) : newBelief();
   const near = node ? neighborhood(GRAPH, node.id) : null;
+  const recUnit = rec ? GRAPH.nodes.find((n) => n.id === rec.nodeId)?.unit : undefined;
+  // Clusters start collapsed. The unit holding the recommended topic (or the selected one, or a filtered unit) opens itself.
+  const isOpen = (u: string) => toggled[u] ?? (u === recUnit || u === node?.unit || u === unit);
   const unitName = (u: string) => UNITS.find((x) => x.id === u)?.name ?? '';
 
   const rows = useMemo(() => {
@@ -144,29 +148,62 @@ export default function GraphHome({ go }: { go: (r: Route) => void }) {
           {view === 'map' ? (
             <>
               <div className="min-h-0 flex-1">
-                <ScoreGraph graph={GRAPH} beliefs={beliefs} selectedId={sel} focusIds={visibleIds} onSelect={setSel} recommendedId={rec?.nodeId ?? null} recommendedText={rec ? (rec.headline === 'Start here' ? 'Start here' : rec.action === 'check' ? 'Check next' : 'Work on this') : undefined} />
+                <ScoreGraph graph={GRAPH} beliefs={beliefs} selectedId={sel} focusIds={visibleIds} summary={checked === total} onSelect={setSel} recommendedId={rec?.nodeId ?? null} recommendedText={rec ? (rec.headline === 'Start here' ? 'Start here' : rec.action === 'check' ? 'Check next' : 'Work on this') : undefined} />
               </div>
             </>
           ) : (
-            <ul className="min-h-0 flex-1 divide-y divide-border overflow-auto" aria-label="Topics">
-              {rows.map((n) => {
-                const bb = bOf(n.id);
-                const st = deriveState(bb);
+            <div className="min-h-0 flex-1 space-y-2 overflow-auto" aria-label="Topics by unit">
+              {UNITS.filter((u) => rows.some((n) => n.unit === u.id)).map((u) => {
+                const inUnit = rows.filter((n) => n.unit === u.id);
+                const open = isOpen(u.id);
+                const done = inUnit.filter((n) => bOf(n.id).answers >= 2).length;
+                const needWork = inUnit.filter((n) => stateOf(n.id) === 'weak').length;
+                const worst = inUnit.reduce<BeliefState>((w, n) => (RANK[stateOf(n.id)] < RANK[w] ? stateOf(n.id) : w), 'verified');
                 return (
-                  <li key={n.id}>
-                    <button onClick={() => setSel(n.id)} aria-current={sel === n.id} className={`flex w-full items-center gap-3 px-3 py-3 text-left hover:bg-surface-alt ${sel === n.id ? 'bg-accent-soft' : ''}`}>
-                      <StateIcon state={st} size={18} danger={isDanger(bb)} />
+                  <section key={u.id} className="rounded-[var(--radius-sm)] border border-border">
+                    <button
+                      type="button"
+                      aria-expanded={open}
+                      onClick={() => setToggled((t) => ({ ...t, [u.id]: !open }))}
+                      className="flex w-full items-center gap-3 px-3 py-3 text-left hover:bg-surface-alt"
+                    >
+                      <span aria-hidden className={`inline-block text-muted transition-transform ${open ? 'rotate-90' : ''}`}>›</span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-base font-medium">{n.label}</span>
-                        <span className="block text-xs text-muted">Unit {n.unit} · {unitName(n.unit)} · {STATE_META[st].label}</span>
-                        {n.description && <span className="mt-0.5 block truncate text-xs text-muted">{n.description}</span>}
+                        <span className="block text-base font-semibold">Unit {u.id} · {u.name}</span>
+                        <span className="block text-xs text-muted">
+                          {plural(inUnit.length, 'topic')} · {done} checked{needWork ? ` · ${needWork} need work` : ''}
+                        </span>
                       </span>
-                      <span className="text-sm text-muted">{bb.answers > 0 ? `${Math.round(mastery(bb) * 100)}% · ${bb.correct}/${bb.answers}` : '–'}</span>
+                      {done > 0 && <StateIcon state={worst} size={16} />}
                     </button>
-                  </li>
+                    {open && (
+                      <ul className="divide-y divide-border border-t border-border" aria-label={`${u.name} topics`}>
+                        {inUnit.map((n) => {
+                          const bb = bOf(n.id);
+                          const st = deriveState(bb);
+                          return (
+                            <li key={n.id}>
+                              <button onClick={() => setSel(n.id)} aria-current={sel === n.id} className={`flex w-full items-center gap-3 px-3 py-3 text-left hover:bg-surface-alt ${sel === n.id ? 'bg-accent-soft' : ''}`}>
+                                <StateIcon state={st} size={18} danger={isDanger(bb)} />
+                                <span className="min-w-0 flex-1">
+                                  <span className="block truncate text-base font-medium">
+                                    {n.label}
+                                    {rec?.nodeId === n.id && <span className="chip ml-2 !py-0 align-middle !text-accent">{rec.action === 'check' ? 'Check next' : 'Work on this'}</span>}
+                                  </span>
+                                  <span className="block text-xs text-muted">{STATE_META[st].label}</span>
+                                  {n.description && <span className="mt-0.5 block truncate text-xs text-muted">{n.description}</span>}
+                                </span>
+                                <span className="text-sm text-muted">{bb.answers > 0 ? `${Math.round(mastery(bb) * 100)}% · ${bb.correct}/${bb.answers}` : '–'}</span>
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </section>
                 );
               })}
-            </ul>
+            </div>
           )}
         </section>
 

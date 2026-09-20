@@ -18,6 +18,8 @@ interface Props {
   /** 'mini' is the slim quiz sidebar: no legend, donut or zoom, and only the tested topic is named. */
   variant?: 'full' | 'mini';
   testingId?: string | null; // the topic being asked about right now
+  /** Summary view: every topic has been checked, so the map-wide temperature tint is shown. Off while the map is still filling in. */
+  summary?: boolean;
   onSelect?: (id: string) => void;
 }
 
@@ -112,7 +114,7 @@ function placeLabels(nodes: GNode[], scale: number, size: (n: GNode) => { w: num
   return out;
 }
 
-export default function ScoreGraph({ graph, beliefs, selectedId, focusIds, recommendedId, recommendedText, variant = 'full', testingId, onSelect }: Props) {
+export default function ScoreGraph({ graph, beliefs, selectedId, focusIds, recommendedId, recommendedText, variant = 'full', testingId, summary = false, onSelect }: Props) {
   const mini = variant === 'mini';
   const wrapRef = useRef<HTMLDivElement>(null);
   const fg = useRef<any>(null);
@@ -123,8 +125,8 @@ export default function ScoreGraph({ graph, beliefs, selectedId, focusIds, recom
   const [size, setSize] = useState({ w: 600, h: 400 });
   const [legendOpen, setLegendOpen] = useState<boolean | null>(null);
   const [howTo, setHowTo] = useState(false);
-  const live = useRef({ beliefs, selectedId, focusIds, recommendedId, recommendedText, testingId });
-  live.current = { beliefs, selectedId, focusIds, recommendedId, recommendedText, testingId };
+  const live = useRef({ beliefs, selectedId, focusIds, recommendedId, recommendedText, testingId, summary });
+  live.current = { beliefs, selectedId, focusIds, recommendedId, recommendedText, testingId, summary };
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -254,6 +256,8 @@ export default function ScoreGraph({ graph, beliefs, selectedId, focusIds, recom
         onRenderFramePre={(ctx: CanvasRenderingContext2D) => {
           // Map temperature: a soft red wash where topics need work, green where they are strong, amber between,
           // so the trouble is visible from a distance. Weighted by how sure the evidence is; unchecked topics add none.
+          // Only in the summary view (all topics checked); while the map is filling in it stays clean.
+          if (!live.current.summary) return;
           for (const n of data.plain) {
             const b = live.current.beliefs[n.id];
             if (!b || b.answers === 0) continue;
@@ -294,11 +298,13 @@ export default function ScoreGraph({ graph, beliefs, selectedId, focusIds, recom
           </div>`;
         }}
         // A link takes on what it joins: a red chain where both ends need work, green where both are strong.
+        // On the full map, edges stay near-invisible until a topic is selected or hovered; then only its own links show.
         linkColor={(l: any) => {
           const a = active();
           const tone = linkTone(l);
+          if (!mini && !a) return rgba(colors.edge, 0.05);
           if (!a) return toneColor(tone);
-          if (endId(l.source) !== a && endId(l.target) !== a) return rgba(colors.edge, 0.14);
+          if (endId(l.source) !== a && endId(l.target) !== a) return rgba(colors.edge, mini ? 0.14 : 0.05);
           return tone === 'idle' ? rgba(colors.accent, 0.9) : toneColor(tone);
         }}
         // Solid = a hard prerequisite (learn it first). Dashed = helpful background.
@@ -311,7 +317,7 @@ export default function ScoreGraph({ graph, beliefs, selectedId, focusIds, recom
           return (l.hard ? 1.6 + l.weight * 2.6 : 1.1 + l.weight * 1.4) * boost * (hot ? 1.4 : 1);
         }}
         linkCurvature={0.2}
-        linkDirectionalArrowLength={(l: any) => (l.hard ? 7 : 0)}
+        linkDirectionalArrowLength={(l: any) => (l.hard && (mini || (!!active() && (endId(l.source) === active() || endId(l.target) === active()))) ? 7 : 0)}
         linkDirectionalArrowRelPos={0.9}
         linkDirectionalArrowColor={(l: any) => toneColor(linkTone(l))}
         nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, scale: number) => {
