@@ -159,6 +159,7 @@ export default function GraphHome({ go }: { go: (r: Route) => void }) {
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-base font-medium">{n.label}</span>
                         <span className="block text-xs text-muted">Unit {n.unit} · {unitName(n.unit)} · {STATE_META[st].label}</span>
+                        {n.description && <span className="mt-0.5 block truncate text-xs text-muted">{n.description}</span>}
                       </span>
                       <span className="text-sm text-muted">{bb.answers > 0 ? `${Math.round(mastery(bb) * 100)}% · ${bb.correct}/${bb.answers}` : '–'}</span>
                     </button>
@@ -206,7 +207,12 @@ export default function GraphHome({ go }: { go: (r: Route) => void }) {
                 </div>
                 <StateChip state={deriveState(b)} />
               </div>
-              {node.description && <p className="mt-2 text-sm">{node.description}</p>}
+              {node.description && (
+                <div className="mt-3 rounded-[var(--radius-sm)] bg-surface-alt p-3">
+                  <div className="label">About this topic</div>
+                  <p className="mt-1 text-sm">{node.description}</p>
+                </div>
+              )}
 
               {b.answers === 0 ? (
                 <div className="mt-4 rounded-[var(--radius-sm)] border border-dashed border-border p-4 text-sm">
