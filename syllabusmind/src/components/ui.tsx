@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import type { BeliefState, LogEntry } from '../engine/types';
 import { STATE_META, STATE_ORDER, StateIcon } from '../lib/states';
-import { getKey, getModels, getSimulateOffline, isOpenRouter, setKey, setModels, setSimulateOffline, usage } from '../lib/llm';
+import { formatCost, getKey, getModels, getSimulateOffline, hasModel, hasUnpriced, isOpenRouter, setKey, setModels, setSimulateOffline, totalCost, usage } from '../lib/llm';
 import { GRAPH, useApp } from '../store/useApp';
 import { evidenceFor } from '../lib/evidence';
 import { noticeView, type AlertVariant } from '../lib/notice';
@@ -53,6 +53,7 @@ export function NavBar({ route, go }: { route: Route; go: (r: Route) => void }) 
         )}
         <div className="ml-auto flex items-center gap-2 text-sm">
           {student && <span className="chip hidden sm:inline-flex">{student.name} · {student.roll}</span>}
+          <UsageBadge onClick={() => setSettings(true)} />
           <button className="btn" onClick={() => setSettings(true)}>Settings</button>
           {student && (
             <button className="btn" title="Your progress stays saved on this browser" onClick={() => { signOut(); go('intake'); }}>Switch student</button>
@@ -97,10 +98,24 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
           />
           Simulate offline (force the backup question set, for demoing the fallback path)
         </label>
-        <div className="label mt-4">Token usage this session</div>
-        <div className="mt-1 text-sm text-muted">
-          {rows.length ? rows.map(([t, u]) => <div key={t}>{t}: {u.calls} calls, {u.tokens} tokens, {u.fallbacks} fell back to the backup set</div>) : 'No model calls yet.'}
+        <div className="label mt-4 flex items-baseline justify-between">
+          <span>Credit used this session</span>
+          <span className="text-base font-semibold normal-case text-ink">{formatCost(totalCost())}</span>
         </div>
+        <div className="mt-1 text-sm text-muted">
+          {rows.length
+            ? rows.map(([t, u]) => (
+                <div key={t}>
+                  {t}: {u.calls} calls, {u.tokens} tokens ({formatCost(u.cost)}){u.unpriced ? ' — model not in the price table, shown as $0' : ''}, {u.fallbacks} fell back to the backup set
+                </div>
+              ))
+            : 'No model calls yet.'}
+        </div>
+        {hasUnpriced() && (
+          <p className="mt-1 text-xs text-muted">
+            One or more calls used a model with no known price (a custom model typed above), so the total shown is a floor, not the real spend. Check that model's own pricing page.
+          </p>
+        )}
         <div className="mt-6 flex justify-end gap-2">
           <button className="btn" onClick={onClose}>Cancel</button>
           <button className="btn btn-primary" onClick={() => { setKey(key); setModels({ question: model }); onClose(); }}>Save</button>
@@ -189,6 +204,30 @@ export function StoreNotice({ className = 'mb-4' }: { className?: string }) {
     <Alert variant={v.variant} title={v.title} onDismiss={clearNotice} className={className}>
       {v.body}
     </Alert>
+  );
+}
+
+/** Re-renders whenever a model call updates usage/cost, without threading it through every screen. */
+function useUsageTick() {
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const f = () => tick((n) => n + 1);
+    window.addEventListener('sm-usage', f);
+    return () => window.removeEventListener('sm-usage', f);
+  }, []);
+}
+
+/** A small, always-visible running total, so credit spend is seen live rather than only inside Settings. */
+export function UsageBadge({ onClick }: { onClick?: () => void }) {
+  useUsageTick();
+  if (!hasModel()) return null; // nothing can have been spent without a key
+  const cost = totalCost();
+  const calls = Object.values(usage).reduce((s, u) => s + u.calls, 0);
+  if (calls === 0) return null; // nothing spent yet this session
+  return (
+    <button type="button" className="chip hidden sm:inline-flex" title="Estimated model spend this session — click for the breakdown" onClick={onClick}>
+      {formatCost(cost)} used{hasUnpriced() ? '+' : ''}
+    </button>
   );
 }
 

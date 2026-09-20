@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest';
-import { generateJSON, getKey, getSimulateOffline, hasModel, setSimulateOffline } from './llm';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { formatCost, generateJSON, getKey, getSimulateOffline, hasModel, hasUnpriced, isPriced, PRICING, setSimulateOffline, totalCost, usage } from './llm';
 import { getStage, onStageChange, setStage } from './agentStatus';
 
 describe('the simulate-offline toggle', () => {
@@ -37,5 +37,72 @@ describe('the visible agent status, on the no-key/offline path', () => {
     off();
     expect(r).toMatchObject({ value: 'backup-value', live: false });
     expect(seen).toEqual(['backup', 'ready']); // never 'asking' or 'checking': no key means no network call at all
+  });
+});
+
+describe('the price table', () => {
+  it('prices every model this app actually defaults to', () => {
+    for (const m of ['nvidia/nemotron-3-super-120b-a12b:free', 'deepseek/deepseek-v4-flash-0731:free', 'gpt-4.1-mini', 'gpt-4o-mini']) {
+      expect(isPriced(m)).toBe(true);
+    }
+    expect(isPriced('some-custom-model-nobody-priced')).toBe(false);
+  });
+  it('prices the free-tier OpenRouter defaults at exactly $0', () => {
+    expect(PRICING['nvidia/nemotron-3-super-120b-a12b:free']).toEqual({ in: 0, out: 0 });
+  });
+});
+
+describe('formatCost', () => {
+  it('shows sub-cent amounts with enough decimals to be visible, not rounded to $0.00', () => {
+    expect(formatCost(0)).toBe('$0');
+    expect(formatCost(0.0031)).toBe('$0.0031');
+    expect(formatCost(1.2)).toBe('$1.20');
+  });
+});
+
+describe('live cost tracking, end to end through a real (mocked) call', () => {
+  const originalFetch = globalThis.fetch;
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+    vi.unstubAllGlobals();
+    for (const k of Object.keys(usage)) delete usage[k];
+  });
+
+  it('turns prompt/completion tokens from the API response into a dollar cost, priced by the model actually used', async () => {
+    vi.stubGlobal('localStorage', { getItem: (k: string) => (k === 'sm.apiKey' ? 'sk-or-test-key' : null), setItem: () => {}, removeItem: () => {} });
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        usage: { prompt_tokens: 1000, completion_tokens: 500 },
+        choices: [{ message: { content: '{"ok":true}' } }],
+      }),
+    }) as unknown as typeof fetch;
+
+    const r = await generateJSON<{ ok: boolean }>({
+      task: 'question',
+      prompt: 'p',
+      model: 'gpt-4o-mini',
+      validate: (x) => x as { ok: boolean },
+      fallback: () => ({ ok: false }),
+    });
+
+    expect(r).toMatchObject({ value: { ok: true }, live: true });
+    // gpt-4o-mini: $0.15/M in, $0.60/M out -> 1000*0.15/1e6 + 500*0.60/1e6
+    expect(totalCost()).toBeCloseTo(0.00015 + 0.0003, 8);
+    expect(usage.question).toMatchObject({ calls: 1, promptTokens: 1000, completionTokens: 500, unpriced: false });
+    expect(hasUnpriced()).toBe(false);
+  });
+
+  it('flags a call to an unpriced model instead of silently counting it as free', async () => {
+    vi.stubGlobal('localStorage', { getItem: (k: string) => (k === 'sm.apiKey' ? 'sk-or-test-key' : null), setItem: () => {}, removeItem: () => {} });
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ usage: { prompt_tokens: 100, completion_tokens: 50 }, choices: [{ message: { content: '{"ok":true}' } }] }),
+    }) as unknown as typeof fetch;
+
+    await generateJSON<{ ok: boolean }>({ task: 'crosscheck', prompt: 'p', model: 'some-custom-model-nobody-priced', validate: (x) => x as { ok: boolean }, fallback: () => ({ ok: false }) });
+
+    expect(totalCost()).toBe(0); // no known price, so no invented cost
+    expect(hasUnpriced()).toBe(true); // but flagged, so the UI doesn't show it as free
   });
 });

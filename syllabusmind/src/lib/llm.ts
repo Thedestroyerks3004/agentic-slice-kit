@@ -28,6 +28,19 @@ export const OPENROUTER_MODELS: Record<Task, string> = {
 };
 export const DEFAULT_MODELS = OPENROUTER_MODELS;
 
+/**
+ * $ per million tokens, for every model this app actually wires up by default. A model not listed here
+ * (a custom one typed into Settings) is priced at $0 for the estimate — flagged as "unpriced" rather than
+ * silently shown as free, so the running total is a floor, never a false sense of safety.
+ */
+export const PRICING: Record<string, { in: number; out: number }> = {
+  'nvidia/nemotron-3-super-120b-a12b:free': { in: 0, out: 0 },
+  'deepseek/deepseek-v4-flash-0731:free': { in: 0, out: 0 },
+  'gpt-4.1-mini': { in: 0.40, out: 1.60 },
+  'gpt-4o-mini': { in: 0.15, out: 0.60 },
+};
+export const isPriced = (model: string) => model in PRICING;
+
 const real = (k: string) => (/^sk-/.test(k.trim()) ? k.trim() : ''); // ignores the .env.local placeholder
 /** Key order: VITE_OPENAI_API_KEY from .env.local (baked into the bundle), then Settings. */
 const ENV_KEY = real((import.meta.env.VITE_OPENAI_API_KEY as string | undefined) ?? '');
@@ -68,15 +81,28 @@ export const getModels = (): Record<Task, string> => {
 };
 export const setModels = (m: Partial<Record<Task, string>>) => localStorage.setItem(LS_MODELS, JSON.stringify(m));
 
-/** Rough per-task token counter so the demo can quote a number. */
-export const usage: Record<string, { calls: number; tokens: number; fallbacks: number }> = {};
-const bump = (task: string, tokens = 0, fallback = false) => {
-  const u = (usage[task] ??= { calls: 0, tokens: 0, fallbacks: 0 });
+/** Rough per-task token and dollar counter, so the demo can show a running total live, not just at the end. */
+export interface TaskUsage { calls: number; tokens: number; promptTokens: number; completionTokens: number; fallbacks: number; cost: number; unpriced: boolean }
+export const usage: Record<string, TaskUsage> = {};
+const bump = (task: string, model: string, promptTokens = 0, completionTokens = 0, fallback = false) => {
+  const u = (usage[task] ??= { calls: 0, tokens: 0, promptTokens: 0, completionTokens: 0, fallbacks: 0, cost: 0, unpriced: false });
+  const price = PRICING[model];
   u.calls += fallback ? 0 : 1;
-  u.tokens += tokens;
+  u.tokens += promptTokens + completionTokens;
+  u.promptTokens += promptTokens;
+  u.completionTokens += completionTokens;
   u.fallbacks += fallback ? 1 : 0;
+  if (!fallback) {
+    if (price) u.cost += (promptTokens / 1e6) * price.in + (completionTokens / 1e6) * price.out;
+    else if (promptTokens + completionTokens > 0) u.unpriced = true; // real tokens spent on a model we can't price
+  }
   if (typeof window !== 'undefined') window.dispatchEvent(new Event('sm-usage')); // no window under node (tests)
 };
+/** Total estimated spend across every task this session. A floor, not a guarantee: see TaskUsage.unpriced. */
+export const totalCost = () => Object.values(usage).reduce((s, u) => s + u.cost, 0);
+export const hasUnpriced = () => Object.values(usage).some((u) => u.unpriced);
+/** "$0.0031" style, with enough decimals to show sub-cent amounts rather than rounding them to "$0.00". */
+export const formatCost = (n: number) => (n === 0 ? '$0' : n < 0.01 ? `$${n.toFixed(4)}` : `$${n.toFixed(2)}`);
 
 const retryModel = (primary: string) => (primary.endsWith(':free') ? (isOpenRouter() ? 'deepseek/deepseek-v4-flash-0731:free' : 'gpt-4o-mini') : primary);
 
@@ -108,7 +134,7 @@ async function callOnce(task: Task, prompt: string, model: string, maxTokens: nu
       throw new Error(`${isOpenRouter() ? 'OpenRouter' : 'OpenAI'} ${res.status}${why}`);
     }
     const data = await res.json();
-    bump(task, data.usage?.total_tokens ?? 0);
+    bump(task, model, data.usage?.prompt_tokens ?? 0, data.usage?.completion_tokens ?? 0);
     return tolerantParse(data.choices?.[0]?.message?.content ?? '');
   } finally {
     clearTimeout(timer);
@@ -169,7 +195,7 @@ export async function generateJSON<T>(opts: {
     }
   }
   setStage('backup');
-  bump(opts.task, 0, true);
+  bump(opts.task, '', 0, 0, true);
   const value = opts.fallback();
   setStage('ready');
   return { value, live: false, error };
