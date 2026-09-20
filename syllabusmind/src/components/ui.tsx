@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import type { BeliefState, LogEntry } from '../engine/types';
 import { STATE_META, STATE_ORDER, StateIcon } from '../lib/states';
-import { formatCost, getKey, getModels, getSimulateOffline, hasModel, hasUnpriced, isOpenRouter, setKey, setModels, setSimulateOffline, totalCost, usage } from '../lib/llm';
+import { formatCost, getSimulateOffline, hasModel, hasUnpriced, isOpenRouter, setSimulateOffline, totalCost, usage } from '../lib/llm';
 import { GRAPH, useApp } from '../store/useApp';
 import { evidenceFor } from '../lib/evidence';
 import { noticeView, type AlertVariant } from '../lib/notice';
@@ -66,8 +66,6 @@ export function NavBar({ route, go }: { route: Route; go: (r: Route) => void }) 
 }
 
 export function SettingsModal({ onClose }: { onClose: () => void }) {
-  const [key, setK] = useState(getKey());
-  const [model, setM] = useState(getModels().question);
   const [offline, setOffline] = useState(getSimulateOffline());
   const [, tick] = useState(0);
   useEffect(() => {
@@ -81,12 +79,10 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
       <div className="card max-h-[90vh] w-full max-w-xl overflow-auto p-6" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-xl font-bold">Model settings</h2>
         <p className="mt-1 text-sm text-muted">
-          Questions are generated live by one model. Without a working key the app falls back to the pre-written backup set. A key in .env.local takes priority over this field. sk-or-… keys go to OpenRouter, sk-… keys to OpenAI.
+          Questions are generated live by one model, using only the API key in .env.local (VITE_OPENAI_API_KEY; optionally VITE_MODEL to pick the model). Nothing is entered here. Without a working key the app falls back to the pre-written backup set.
         </p>
-        <label className="label mt-4 block" htmlFor="key">API key</label>
-        <input id="key" className="input mt-1" type="password" placeholder="sk-…" value={key} onChange={(e) => setK(e.target.value)} />
-        <label className="label mt-4 block" htmlFor="model">Model ({isOpenRouter() ? 'OpenRouter' : 'OpenAI'})</label>
-        <input id="model" className="input mt-1" value={model} onChange={(e) => setM(e.target.value)} />
+        <div className="label mt-4">Provider</div>
+        <div className="mt-1 text-sm">{hasModel() ? (isOpenRouter() ? 'OpenRouter' : 'OpenAI') : 'No key found in .env.local'}</div>
         <label className="mt-4 flex items-center gap-2 text-sm">
           <input
             type="checkbox"
@@ -113,12 +109,11 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
         </div>
         {hasUnpriced() && (
           <p className="mt-1 text-xs text-muted">
-            One or more calls used a model with no known price (a custom model typed above), so the total shown is a floor, not the real spend. Check that model's own pricing page.
+            One or more calls used a model with no known price (a custom VITE_MODEL), so the total shown is a floor, not the real spend. Check that model's own pricing page.
           </p>
         )}
         <div className="mt-6 flex justify-end gap-2">
-          <button className="btn" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" onClick={() => { setKey(key); setModels({ question: model }); onClose(); }}>Save</button>
+          <button className="btn btn-primary" onClick={onClose}>Close</button>
         </div>
       </div>
     </div>

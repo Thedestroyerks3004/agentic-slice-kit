@@ -55,3 +55,10 @@ here specifically as reused prior content, not as unused leftovers.
 Listed in `syllabusmind/package.json` but unreferenced anywhere in `syllabusmind/src/` (grepped,
 zero hits) — a leftover from the archived PDF-upload feature above. See the separate commit removing
 it.
+
+## The Agentic Slice Kit itself
+
+`slice/`, `web/`, `scripts/` (except `syllabusmind.py`, a stub), `tests/`, `docs/`, `corpus/`, `.devcontainer/`,
+`pytest.ini` and `requirements.txt` are the organisers' starter kit, provided before the event. The team did
+not build on it; see [ARCHITECTURE-DIVERGENCE.md](ARCHITECTURE-DIVERGENCE.md). The only implementation
+submitted for judging is `syllabusmind/`.

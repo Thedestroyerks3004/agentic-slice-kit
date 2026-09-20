@@ -1,0 +1,3 @@
+# Put your OpenRouter or OpenAI key in syllabusmind/.env.local as:  VITE_OPENAI_API_KEY=sk-...
+# (optional: VITE_MODEL=<model name> to pin the model). Then open http://localhost:5173 in a browser.
+npm --prefix syllabusmind install && npm --prefix syllabusmind run dev

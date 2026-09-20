@@ -51,12 +51,8 @@ describe('the price table', () => {
     for (const m of Object.values(OPENROUTER_MODELS)) expect(isPriced(m)).toBe(true);
     for (const m of Object.values(OPENAI_MODELS)) expect(isPriced(m)).toBe(true);
   });
-  it('retries a free model on a real, priced paid model — never on another free model that might not exist', () => {
-    vi.stubGlobal('localStorage', { getItem: (k: string) => (k === 'sm.apiKey' ? 'sk-or-test-key' : null), setItem: () => {}, removeItem: () => {} });
-    const target = retryModel('nvidia/nemotron-3-super-120b-a12b:free');
-    expect(target).toBe('openai/gpt-4o-mini');
-    expect(isPriced(target)).toBe(true);
-    vi.unstubAllGlobals();
+  it('retries on the same model, so only the one configured model is ever used', () => {
+    expect(retryModel('nvidia/nemotron-3-super-120b-a12b:free')).toBe('nvidia/nemotron-3-super-120b-a12b:free');
   });
   it('prices the free-tier OpenRouter defaults at exactly $0', () => {
     expect(PRICING['nvidia/nemotron-3-super-120b-a12b:free']).toEqual({ in: 0, out: 0 });

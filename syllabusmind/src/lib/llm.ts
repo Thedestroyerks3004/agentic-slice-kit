@@ -8,8 +8,6 @@ import { setStage } from './agentStatus';
 
 export type Task = 'extract' | 'question' | 'crosscheck' | 'propagate' | 'rootcause';
 
-const LS_KEY = 'sm.apiKey';
-const LS_MODELS = 'sm.models.v3';
 
 export const OPENAI_MODELS: Record<Task, string> = {
   extract: 'gpt-4.1-mini',
@@ -22,7 +20,7 @@ export const OPENAI_MODELS: Record<Task, string> = {
 export const OPENROUTER_MODELS: Record<Task, string> = {
   extract: 'nvidia/nemotron-3-super-120b-a12b:free',
   question: 'nvidia/nemotron-3-super-120b-a12b:free',
-  crosscheck: 'qwen/qwen3.8-27b:free',
+  crosscheck: 'nvidia/nemotron-3-super-120b-a12b:free',
   propagate: 'nvidia/nemotron-3-super-120b-a12b:free',
   rootcause: 'nvidia/nemotron-3-super-120b-a12b:free',
 };
@@ -43,8 +41,10 @@ export const PRICING: Record<string, { in: number; out: number }> = {
 export const isPriced = (model: string) => model in PRICING;
 
 const real = (k: string) => (/^sk-/.test(k.trim()) ? k.trim() : ''); // ignores the .env.local placeholder
-/** Key order: VITE_OPENAI_API_KEY from .env.local (baked into the bundle), then Settings. */
+/** The only key ever used: VITE_OPENAI_API_KEY from .env.local (baked into the bundle). Nothing typed in the UI is used. */
 const ENV_KEY = real((import.meta.env.VITE_OPENAI_API_KEY as string | undefined) ?? '');
+/** Optional VITE_MODEL in .env.local pins the model name; otherwise the provider's default below. */
+const ENV_MODEL = ((import.meta.env.VITE_MODEL as string | undefined) ?? '').trim();
 
 /**
  * Session-only "simulate offline" switch, for demoing the backup path on demand. It is checked before
@@ -58,34 +58,22 @@ export const setSimulateOffline = (v: boolean) => {
   offline = v;
 };
 
-export const getKey = () => {
-  if (offline) return '';
-  if (ENV_KEY) return ENV_KEY;
-  try {
-    return real(localStorage.getItem(LS_KEY) || '');
-  } catch {
-    return '';
-  }
-};
-export const setKey = (k: string) => localStorage.setItem(LS_KEY, k.trim());
+export const getKey = () => (offline ? '' : ENV_KEY);
 export const hasModel = () => !!getKey();
 /** sk-or-... keys are OpenRouter keys: same request shape, different endpoint and model names. */
 export const isOpenRouter = () => getKey().startsWith('sk-or-');
 
+/** One model for every task: the env-pinned one, else the provider default for the env key. */
 export const getModels = (): Record<Task, string> => {
   const base = isOpenRouter() ? OPENROUTER_MODELS : OPENAI_MODELS;
-  try {
-    return { ...base, ...JSON.parse(localStorage.getItem(LS_MODELS) || '{}') };
-  } catch {
-    return base;
-  }
+  const m = ENV_MODEL || base.question;
+  return { extract: m, question: m, crosscheck: m, propagate: m, rootcause: m };
 };
-export const setModels = (m: Partial<Record<Task, string>>) => localStorage.setItem(LS_MODELS, JSON.stringify(m));
 
 /** Rough per-task token and dollar counter, so the demo can show a running total live, not just at the end. */
 export interface TaskUsage { calls: number; tokens: number; promptTokens: number; completionTokens: number; fallbacks: number; cost: number; unpriced: boolean }
 export const usage: Record<string, TaskUsage> = {};
-const bump = (task: string, model: string, promptTokens = 0, completionTokens = 0, fallback = false) => {
+const bump = (task: string, model: string, promptTokens = 0, completionTokens = 0, fallback = false, billed?: number) => {
   const u = (usage[task] ??= { calls: 0, tokens: 0, promptTokens: 0, completionTokens: 0, fallbacks: 0, cost: 0, unpriced: false });
   const price = PRICING[model];
   u.calls += fallback ? 0 : 1;
@@ -94,7 +82,8 @@ const bump = (task: string, model: string, promptTokens = 0, completionTokens = 
   u.completionTokens += completionTokens;
   u.fallbacks += fallback ? 1 : 0;
   if (!fallback) {
-    if (price) u.cost += (promptTokens / 1e6) * price.in + (completionTokens / 1e6) * price.out;
+    if (typeof billed === 'number' && billed >= 0) u.cost += billed; // the provider's own charge beats our table
+    else if (price) u.cost += (promptTokens / 1e6) * price.in + (completionTokens / 1e6) * price.out;
     else if (promptTokens + completionTokens > 0) u.unpriced = true; // real tokens spent on a model we can't price
   }
   if (typeof window !== 'undefined') window.dispatchEvent(new Event('sm-usage')); // no window under node (tests)
@@ -105,10 +94,10 @@ export const hasUnpriced = () => Object.values(usage).some((u) => u.unpriced);
 /** "$0.0031" style, with enough decimals to show sub-cent amounts rather than rounding them to "$0.00". */
 export const formatCost = (n: number) => (n === 0 ? '$0' : n < 0.01 ? `$${n.toFixed(4)}` : `$${n.toFixed(2)}`);
 
-/** Escalate from a free (cheap, occasionally flaky) model to a real paid one on retry, never to another free model. */
-export const retryModel = (primary: string) => (primary.endsWith(':free') ? (isOpenRouter() ? 'openai/gpt-4o-mini' : 'gpt-4o-mini') : primary);
+/** One model only: a retry asks the same model again rather than switching to a different (paid) one. */
+export const retryModel = (primary: string) => primary;
 
-async function callOnce(task: Task, prompt: string, model: string, maxTokens: number, timeoutMs: number): Promise<unknown> {
+async function callOnce(task: Task, prompt: string, model: string, maxTokens: number, timeoutMs: number, plain = false): Promise<unknown> {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), timeoutMs);
   try {
@@ -125,6 +114,8 @@ async function callOnce(task: Task, prompt: string, model: string, maxTokens: nu
         temperature: 0.3,
         max_tokens: maxTokens,
         response_format: { type: 'json_object' },
+        // OpenRouter: report the real charge, and skip hidden "thinking" (it made calls take 20s+ for no benefit).
+        ...(isOpenRouter() && !plain ? { usage: { include: true }, reasoning: { enabled: false } } : {}),
         messages: [
           { role: 'system', content: 'Reply with a single JSON object only. No prose, no markdown fences.' },
           { role: 'user', content: prompt },
@@ -136,7 +127,7 @@ async function callOnce(task: Task, prompt: string, model: string, maxTokens: nu
       throw new Error(`${isOpenRouter() ? 'OpenRouter' : 'OpenAI'} ${res.status}${why}`);
     }
     const data = await res.json();
-    bump(task, model, data.usage?.prompt_tokens ?? 0, data.usage?.completion_tokens ?? 0);
+    bump(task, model, data.usage?.prompt_tokens ?? 0, data.usage?.completion_tokens ?? 0, false, typeof data.usage?.cost === 'number' ? data.usage.cost : undefined);
     return tolerantParse(data.choices?.[0]?.message?.content ?? '');
   } finally {
     clearTimeout(timer);
@@ -174,7 +165,7 @@ export async function generateJSON<T>(opts: {
     for (const model of [primary, retryModel(primary)]) {
       setStage(attempt++ === 0 ? 'asking' : 'retrying');
       try {
-        const reply = await callOnce(opts.task, opts.prompt, model, opts.maxTokens ?? 2500, opts.timeoutMs ?? 120000);
+        const reply = await callOnce(opts.task, opts.prompt, model, opts.maxTokens ?? 2500, opts.timeoutMs ?? 120000, attempt > 1);
         setStage('checking');
         const v = opts.validate(reply);
         if (v) {
@@ -189,8 +180,9 @@ export async function generateJSON<T>(opts: {
           pause(10 * 60_000, error);
           break;
         }
-        if (e instanceof Error && e.name === 'AbortError' && ++timeouts >= 2) {
-          pause(10 * 60_000, error);
+        if (e instanceof Error && e.name === 'AbortError' && ++timeouts >= 4) {
+          pause(60_000, error);
+          timeouts = 0;
           break;
         }
       }

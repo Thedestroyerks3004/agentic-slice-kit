@@ -10,7 +10,7 @@ export type AgentStage = 'asking' | 'checking' | 'retrying' | 'backup' | 'ready'
 export const STAGE_LABEL: Record<Exclude<AgentStage, null>, string> = {
   asking: 'Asking the model to write questions',
   checking: 'Checking the reply is well-formed',
-  retrying: 'That model was slow or malformed — trying a second one',
+  retrying: 'The model was slow or malformed — trying it once more',
   backup: 'Using the pre-written backup set',
   ready: 'Ready',
 };

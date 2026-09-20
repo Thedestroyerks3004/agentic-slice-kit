@@ -127,7 +127,7 @@ export async function generateDiagnostic(graph: ConceptGraph, node: ConceptNode)
     },
     fallback: () => backupDiagnostic(node.id),
     maxTokens: 6000,
-    timeoutMs: 25000,
+    timeoutMs: 45000,
   });
   return { questions: r.value, source: r.live ? 'live' : 'backup', error: r.error };
 }
@@ -144,7 +144,7 @@ export async function generateDeep(graph: ConceptGraph, node: ConceptNode): Prom
     },
     fallback: () => backupDeep(node.id),
     maxTokens: 9000,
-    timeoutMs: 40000,
+    timeoutMs: 75000,
   });
   return { questions: finalizeDeep(node.id, r.value), source: r.live ? 'live' : 'backup', error: r.error };
 }
